@@ -792,5 +792,177 @@ class EndToEnd(unittest.TestCase):
                     p.communicate()
 
 
+class Tools(Rig):
+    def setUp(self):
+        super().setUp()
+        self.m.tool_processes = lambda tool: []
+
+    def test_create_layouts_and_env(self):
+        for tool in cm.TOOLS:
+            with self.subTest(tool=tool):
+                self.m.tool_create(tool, "work")
+                root = self.root / "tools" / tool / "work"
+                self.assertTrue(root.is_dir())
+                env = self.m.tool_env(tool, "work")
+                if tool == "codex":
+                    self.assertEqual(env, {"CODEX_HOME": str(root)})
+                    self.assertIn('cli_auth_credentials_store = "file"',
+                                  (root / "config.toml").read_text())
+                elif tool == "gemini":
+                    self.assertEqual(env, {"GEMINI_CLI_HOME": str(root)})
+                    self.assertTrue((root / ".gemini").is_dir())
+                elif tool == "copilot":
+                    self.assertEqual(env["COPILOT_HOME"], str(root))
+                    self.assertEqual(env["COPILOT_CACHE_HOME"], str(self.root / "cache/copilot-work"))
+                else:
+                    self.assertEqual(env["XDG_DATA_HOME"], str(root / "data"))
+                    self.assertEqual(env["XDG_CONFIG_HOME"], str(root / "config"))
+                    self.assertEqual(env["XDG_STATE_HOME"], str(root / "state"))
+                    self.assertEqual(env["XDG_CACHE_HOME"], str(self.root / "cache/opencode-work"))
+
+    def test_same_name_independent_per_tool_and_duplicates_refused(self):
+        self.m.tool_create("codex", "alpha")
+        self.m.tool_create("gemini", "alpha")
+        with self.assertRaises(cm.Error):
+            self.m.tool_create("codex", "alpha")
+        with self.assertRaises(cm.Error):
+            self.m.tool_create("nope", "x")
+
+    def test_register_existing_without_modifying(self):
+        codex = self.home / ".codex"
+        write(codex / "config.toml", "model = 'x'\n")
+        self.m.tool_create("codex", "default", codex, existing=True)
+        self.assertEqual((codex / "config.toml").read_text(), "model = 'x'\n")
+        with self.assertRaises(cm.Error):
+            self.m.tool_create("opencode", "default", self.home / ".local/share/opencode", existing=True)
+        with self.assertRaises(cm.Error):  # ~ itself is never a managed root
+            self.m.tool_create("gemini", "default", self.home, existing=True)
+        gem = self.home / "gemhome"
+        (gem / ".gemini").mkdir(parents=True)
+        self.m.tool_create("gemini", "default", gem, existing=True)
+
+    def test_overlap_with_claude_and_other_tools_refused(self):
+        with self.assertRaises(cm.Error):
+            self.m.tool_create("codex", "x", self.a["cli"] / "nested")
+        self.m.tool_create("codex", "x")
+        with self.assertRaises(cm.Error):
+            self.m.tool_create("gemini", "y", self.root / "tools/codex/x/sub")
+        with self.assertRaises(cm.Error):
+            self.m.create("gamma", cli=self.root / "tools/codex/x/inner")
+
+    def test_unregister_keeps_data(self):
+        self.m.tool_create("copilot", "w")
+        root = self.m.tool_root("copilot", "w")
+        write(root / "settings.json", {})
+        self.m.tool_unregister("copilot", "w")
+        self.assertTrue((root / "settings.json").exists())
+        with self.assertRaises(cm.Error):
+            self.m.tool_profile("copilot", "w")
+
+    def test_backup_verify_restore(self):
+        self.m.tool_create("codex", "w")
+        root = self.m.tool_root("codex", "w")
+        write(root / "auth.json", {"t": "old"})
+        b = self.m.tool_backup("codex", "w")
+        self.assertEqual(self.m.tool_verify(b)["tool"], "codex")
+        write(root / "auth.json", {"t": "new"})
+        pre = self.m.tool_restore("codex", "w", b)
+        self.assertEqual(json.loads((root / "auth.json").read_text()), {"t": "old"})
+        self.assertEqual(json.loads((pre / "data/auth.json").read_text()), {"t": "new"})
+        write(b / "data/auth.json", {"t": "tampered"})
+        with self.assertRaises(cm.Error):
+            self.m.tool_verify(b)
+
+    def test_restore_to_other_profile_refused(self):
+        self.m.tool_create("codex", "a")
+        self.m.tool_create("codex", "b")
+        b = self.m.tool_backup("codex", "a")
+        with self.assertRaises(cm.Error):
+            self.m.tool_restore("codex", "b", b)
+
+    def test_running_tool_blocks_data_operation(self):
+        self.m.tool_processes = lambda tool: [(42, "/usr/local/bin/codex")]
+        with self.assertRaises(cm.Error):
+            self.m.tool_cold("codex")
+
+    def test_process_detection_patterns(self):
+        out = "  1 /opt/homebrew/bin/codex exec\n  2 node /x/@google/gemini-cli/dist/index.js\n" \
+              "  3 /bin/zsh\n  4 /x/sbin/codex-work\n"
+        result = subprocess.CompletedProcess([], 0, stdout=out, stderr="")
+        m = cm.Manager(self.root, self.home)
+        with mock.patch.object(cm.subprocess, "run", return_value=result):
+            self.assertEqual([p for p, _ in m.tool_processes("codex")], [1])
+            self.assertEqual([p for p, _ in m.tool_processes("gemini")], [2])
+            self.assertEqual(m.tool_processes("opencode"), [])
+
+    def test_recursive_binary_refused(self):
+        link = self.home / "codex"
+        link.symlink_to(SOURCE)
+        with self.assertRaises(cm.Error):
+            self.m.tool_set_binary("codex", str(link))
+        self.assertEqual(self.m.tool_registry("codex").get("binary", ""), "")
+
+
+class ToolExec(unittest.TestCase):
+    def test_symlink_launch_env_isolation_args_and_exit(self):
+        with tempfile.TemporaryDirectory(prefix="cm-tool-") as tmp:
+            root = Path(tmp).resolve() / "install dir"
+            root.mkdir()
+            script = root / "claude-manager.py"
+            shutil.copy2(SOURCE, script)
+            script.chmod(0o700)
+            env = dict(os.environ, HOME=str(root.parent))
+            for k in ("CODEX_HOME", "GEMINI_CLI_HOME", "COPILOT_HOME", "XDG_DATA_HOME"):
+                env.pop(k, None)
+            def call(*args):
+                return subprocess.run([sys.executable, str(script), *args], env=env,
+                                      text=True, capture_output=True)
+            for tool in cm.TOOLS:
+                fake = root / ("real-" + tool)
+                fake.write_text("#!" + sys.executable + "\n"
+                                "import sys,os,json\n"
+                                "keys=['CODEX_HOME','GEMINI_CLI_HOME','COPILOT_HOME',"
+                                "'COPILOT_CACHE_HOME','XDG_CONFIG_HOME','XDG_DATA_HOME',"
+                                "'XDG_STATE_HOME','XDG_CACHE_HOME','CODEX_API_KEY','GH_TOKEN',"
+                                "'GEMINI_API_KEY','OPENCODE_CONFIG','KEEP']\n"
+                                "print(json.dumps({'args':sys.argv[1:],"
+                                "'env':{k:os.environ.get(k) for k in keys}}))\n"
+                                "sys.exit(7)\n")
+                fake.chmod(0o700)
+                for args in (["tool-create", tool, "w", "--yes"], ["tool-set-binary", tool, str(fake)],
+                             ["tool-launchers", tool, "w"]):
+                    p = call(*args)
+                    self.assertEqual(p.returncode, 0, p.stderr)
+            secrets = {"CODEX_API_KEY": "x", "GH_TOKEN": "x", "GEMINI_API_KEY": "x",
+                       "OPENCODE_CONFIG": "/elsewhere.json", "KEEP": "kept"}
+            run_env = dict(env, **secrets)
+            for tool in cm.TOOLS:
+                with self.subTest(tool=tool):
+                    link = root / "sbin" / (tool + "-w")
+                    p = subprocess.run([str(link), "--flag", "a b", ""], env=run_env,
+                                       text=True, capture_output=True)
+                    self.assertEqual(p.returncode, 7, p.stderr)
+                    d = json.loads(p.stdout)
+                    self.assertEqual(d["args"], ["--flag", "a b", ""])
+                    e = d["env"]
+                    prof = str(root / "tools" / tool / "w")
+                    self.assertEqual(e["KEEP"], "kept")
+                    expected = {"codex": ("CODEX_HOME", prof), "gemini": ("GEMINI_CLI_HOME", prof),
+                                "copilot": ("COPILOT_HOME", prof),
+                                "opencode": ("XDG_DATA_HOME", prof + "/data")}[tool]
+                    self.assertEqual(e[expected[0]], expected[1])
+                    leaked = {k for k in ("CODEX_API_KEY", "GH_TOKEN", "GEMINI_API_KEY",
+                                          "OPENCODE_CONFIG") if e[k] is not None}
+                    owned = set(cm.TOOLS[tool]["auth_env"])
+                    self.assertFalse(leaked & owned, leaked)
+            # Explicit inherit keeps the variables for that profile only.
+            self.assertEqual(call("tool-auth-env", "copilot", "w", "inherit").returncode, 0)
+            p = subprocess.run([str(root / "sbin/copilot-w")], env=run_env, text=True,
+                               capture_output=True)
+            self.assertEqual(json.loads(p.stdout)["env"]["GH_TOKEN"], "x")
+            listing = json.loads(call("tool-list").stdout)
+            self.assertTrue(listing["opencode"]["profiles"]["w"]["launcher"].endswith("opencode-w"))
+
+
 if __name__ == "__main__":
     unittest.main()
