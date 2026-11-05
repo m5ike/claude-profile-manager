@@ -13,8 +13,10 @@ enum Snapshotter {
     static func run(store: Store) async {
         guard let dir = directory else { return }
         try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
-        if UserDefaults.standard.string(forKey: "snapshotAppearance") == "light" {
-            NSApp.appearance = NSAppearance(named: .aqua)
+        switch UserDefaults.standard.string(forKey: "snapshotAppearance") {
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        default: break
         }
         try? await Task.sleep(nanoseconds: 1_500_000_000)
         guard let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }) else { return }

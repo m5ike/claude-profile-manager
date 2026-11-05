@@ -5,7 +5,7 @@
 <title>Claude Profile Manager – Nápověda</title>
 <style>
   @page { size: A4; margin: 18mm 17mm 20mm 17mm; }
-  :root { --accent: #b9573a; --ink: #1d1d1f; --muted: #6e6e73; --line: #e3e3e6; --soft: #f6f4f1; }
+  :root { --accent: #4F46E5; --ink: #1d1d1f; --muted: #6e6e73; --line: #e3e3e6; --soft: #f6f4f1; }
   * { box-sizing: border-box; }
   body { font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; color: var(--ink);
          font-size: 10.4pt; line-height: 1.5; margin: 0; }
@@ -35,7 +35,7 @@
   figcaption { font-size: 8.8pt; color: var(--muted); margin-top: 5pt; text-align: center; }
   .note, .warn, .tip { border-radius: 6pt; padding: 8pt 11pt; margin: 8pt 0 10pt; page-break-inside: avoid; }
   .note { background: #eef4fd; border-left: 3.5pt solid #3478f6; }
-  .warn { background: #fdf1ec; border-left: 3.5pt solid var(--accent); }
+  .warn { background: #fdf1ec; border-left: 3.5pt solid #D97706; }
   .tip  { background: #eef8ef; border-left: 3.5pt solid #34a853; }
   .note b:first-child, .warn b:first-child, .tip b:first-child { display: block; margin-bottom: 2pt; }
   .steps { counter-reset: s; list-style: none; padding-left: 0; }
@@ -48,10 +48,10 @@
   /* Cover */
   .cover { height: 255mm; display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
            padding: 0 6mm; page-break-after: always; }
-  .cover img { width: 110pt; margin-bottom: 22pt; }
+  .cover img { width: 150pt; margin-bottom: 18pt; margin-left: -14pt; }
   .cover .title { font-size: 34pt; font-weight: 700; letter-spacing: -0.5pt; margin: 0; }
   .cover .sub { font-size: 15pt; color: var(--muted); margin: 6pt 0 26pt; }
-  .cover .bar { width: 60pt; height: 4pt; background: var(--accent); border-radius: 2pt; margin-bottom: 20pt; }
+  .cover .bar { width: 60pt; height: 4pt; background: linear-gradient(90deg, #6366F1, #7C3AED); border-radius: 2pt; margin-bottom: 20pt; }
   .cover .meta { font-size: 10pt; color: var(--muted); line-height: 1.7; }
 
   /* TOC */
@@ -76,7 +76,7 @@
   <p class="title">Claude Profile Manager</p>
   <p class="sub">Uživatelská příručka grafické aplikace pro macOS</p>
   <div class="meta">
-    Verze 1.4.0 · listopad 2026 · macOS 13 Ventura a novější<br>
+    Verze 1.5.0 · listopad 2026 · macOS 13 Ventura a novější<br>
     Oddělené profily Claude Code, Claude Desktop, OpenAI Codex CLI,<br>Google Gemini CLI, GitHub Copilot CLI, opencode a xAI Grok Build CLI na jednom Macu:<br>
     vytváření, spouštění, zálohy, migrace a diagnostika.
   </div>
@@ -89,7 +89,7 @@
     <li><a href="#instalace"><span class="n">2</span>Instalace a první spuštění</a>
       <ol><li><a href="#pozadavky">Požadavky</a></li><li><a href="#sestaveni">Sestavení aplikace</a></li><li><a href="#prvni">První spuštění a nastavení</a></li></ol></li>
     <li><a href="#okno"><span class="n">3</span>Hlavní okno</a>
-      <ol><li><a href="#prehled">Obrazovka Přehled</a></li></ol></li>
+      <ol><li><a href="#prehled">Obrazovka Přehled</a></li><li><a href="#vzhled">Vzhled a tmavý režim</a></li></ol></li>
     <li><a href="#profily"><span class="n">4</span>Profily</a>
       <ol><li><a href="#typy">Typy profilů</a></li><li><a href="#novy">Nový profil</a></li><li><a href="#registrace">Registrace existujících dat</a></li><li><a href="#detail">Detail profilu</a></li><li><a href="#spousteni">Spouštění CLI a Desktopu</a></li><li><a href="#nastaveni">Úprava nastavení</a></li><li><a href="#zmena-typu">Změna typu profilu</a></li></ol></li>
     <li><a href="#dalsi"><span class="n">5</span>Další AI nástroje (Codex, Gemini, Copilot, opencode, Grok)</a>
@@ -188,14 +188,19 @@
 <p class="lead">Okno je rozděleno na postranní panel s navigací a hlavní oblast s obsahem. Rozložení odpovídá zvyklostem moderních aplikací pro macOS.</p>
 <figure><img src="img/01-prehled.png" alt=""><figcaption>Obrázek 1 – Hlavní okno s přehledem profilů</figcaption></figure>
 <h2 id="prehled">Obrazovka Přehled</h2>
-<p>Přehled je výchozí obrazovka. Horní dlaždice ukazují počet profilů, počet záloh, výsledek diagnostiky a verzi správce. Pokud diagnostika najde problém (chybějící adresář, nenalezený Claude binary, nedokončená transakce…), zobrazí se pod dlaždicemi seznam s odkazem na podrobnosti.</p>
-<p>Každý profil má vlastní kartu s typem, cestami k datům, počtem projektů a záloh. Tlačítka <span class="ui">CLI</span> a <span class="ui">Desktop</span> profil přímo spustí, <span class="ui">Detail</span> (nebo dvojklik na kartu) otevře jeho nastavení a nabídka <span class="ui">⋯</span> nabízí rychlé akce.</p>
-<p>Pokud zatím nemáte žádný profil, přehled zobrazí průvodce prvními kroky.</p>
+<p>Přehled začíná barevnou hlavičkou s logem a souhrnem: počet profilů Claude, počet profilů dalších AI nástrojů, počet záloh, výsledek diagnostiky a verze. Pokud diagnostika najde problém (chybějící adresář, nenalezený program, nedokončená transakce…) nebo se liší verze aplikace a skriptu, zobrazí se pod hlavičkou upozornění s odkazem na řešení.</p>
+<p>Sekce <b>Profily Claude</b> obsahuje kartu každého profilu s typem, cestami k datům, počtem projektů a záloh. Tlačítka <span class="ui">CLI</span> a <span class="ui">Desktop</span> profil přímo spustí, <span class="ui">Detail</span> (nebo dvojklik na kartu) otevře jeho nastavení a nabídka <span class="ui">⋯</span> nabízí rychlé akce. Sekce <b>Další AI nástroje</b> ukazuje dlaždici pro Codex, Gemini, Copilot, opencode a Grok s počtem profilů a stavem programu (zelená = nalezen, oranžová = chybí); kliknutím dlaždici otevřete.</p>
+<p>Pokud zatím nemáte žádný profil Claude, přehled zobrazí průvodce prvními kroky.</p>
+<h2 id="vzhled">Vzhled a tmavý režim</h2>
+<figure class="medium"><img src="img/13-tmavy-rezim.png" alt=""><figcaption>Obrázek 2 – Přehled v tmavém režimu</figcaption></figure>
+<p>Aplikace se řídí nastavením vzhledu macOS (světlý, tmavý, automatický). Každý typ profilu a každý nástroj má vlastní barvu, která se opakuje v postranním panelu, v záhlaví obrazovky i na kartách: indigová CLI, fialová CLI + Desktop, modrá Desktop; zelenomodrá Codex, modrá Gemini, šedomodrá Copilot, oranžová opencode, růžová Grok. Barvy jsou neutrální – nejde o loga ani barvy výrobců.</p>
 <h2>Části okna</h2>
 <table>
   <tr><th style="width:30%">Oblast</th><th>Popis</th></tr>
-  <tr><td><b>Správce → Přehled</b></td><td>Souhrn stavu, problémy z diagnostiky a karty všech profilů.</td></tr>
-  <tr><td><b>Profily</b></td><td>Seznam profilů s ikonou a typem (CLI / GUI / BOTH). Pravé tlačítko otevře rychlé akce: spuštění, záloha, spouštěče, zobrazení ve Finderu.</td></tr>
+  <tr><td><b>Logo a verze</b></td><td>Horní část postranního panelu s verzí aplikace; verze správce je ve spodní části panelu.</td></tr>
+  <tr><td><b>Přehled</b></td><td>Souhrn stavu, problémy z diagnostiky, karty profilů Claude a dlaždice dalších AI nástrojů.</td></tr>
+  <tr><td><b>Profily Claude</b></td><td>Seznam profilů s barevným odznakem a typem (CLI / GUI / BOTH). Pravé tlačítko otevře rychlé akce: spuštění, záloha, spouštěče, zobrazení ve Finderu.</td></tr>
+  <tr><td><b>Další AI nástroje</b></td><td>Codex, Gemini, Copilot, opencode a Grok s počtem profilů; každý má vlastní obrazovku.</td></tr>
   <tr><td><b>Nástroje</b></td><td>Zálohy a přenos, Migrace, Projekty, Prostředí a diagnostika, Protokol činností. Oranžová ikona u protokolu značí neúspěšnou operaci.</td></tr>
   <tr><td><b>Panel nástrojů</b></td><td>Průběh aktuální operace, <span class="ui">Obnovit</span> (<kbd>⌘</kbd><kbd>R</kbd>), <span class="ui">+</span> nový profil (s nabídkou registrace) a <span class="ui">?</span> nápověda.</td></tr>
   <tr><td><b>Oznámení</b></td><td>Úspěšné operace se krátce zobrazí v dolní části okna. Chyby se zobrazí v dialogu s možností přejít do protokolu.</td></tr>
@@ -214,7 +219,7 @@
 <p>Název profilu musí mít 1–32 znaků, začínat malým písmenem a obsahovat jen malá písmena ASCII, číslice, <code>_</code> a <code>-</code>. Předpona <code>gui-</code> je rezervovaná. Formulář chybný název okamžitě označí.</p>
 
 <h2 id="novy">Nový profil</h2>
-<figure class="small"><img src="img/03-novy-profil.png" alt=""><figcaption>Obrázek 2 – Dialog nového profilu</figcaption></figure>
+<figure class="small"><img src="img/03-novy-profil.png" alt=""><figcaption>Obrázek 3 – Dialog nového profilu</figcaption></figure>
 <ol class="steps">
   <li>Zvolte <span class="ui">Soubor → Nový profil…</span> (<kbd>⌘</kbd><kbd>N</kbd>) nebo tlačítko <span class="ui">+</span>.</li>
   <li>Zadejte název a zvolte typ profilu.</li>
@@ -228,7 +233,7 @@
 <div class="warn"><b>Jedna registrace pro jednu cestu</b>Správce odmítne překrývající se kořeny, symlinky v cestě i systémové nebo nadřazené adresáře (např. samotný domovský adresář). Registrace vyžaduje ukončené procesy Claude.</div>
 
 <h2 id="detail">Detail profilu</h2>
-<figure><img src="img/02-profil.png" alt=""><figcaption>Obrázek 3 – Detail profilu typu CLI + Desktop</figcaption></figure>
+<figure><img src="img/02-profil.png" alt=""><figcaption>Obrázek 4 – Detail profilu typu CLI + Desktop</figcaption></figure>
 <table>
   <tr><th style="width:28%">Sekce</th><th>Obsah</th></tr>
   <tr><td><b>Umístění dat</b></td><td>Cesty CLI (<code>CLAUDE_CONFIG_DIR</code>) a Desktop (<code>--user-data-dir</code>), případně cesty vypnutých částí. Šipka otevře umístění ve Finderu.</td></tr>
@@ -265,7 +270,7 @@
 <!-- 5 tools -->
 <h1 id="dalsi"><span class="num">5</span>Další AI nástroje</h1>
 <p class="lead">Od verze 1.2.0 spravuje Claude Profile Manager oddělené profily i pro další AI asistenty pro programování v terminálu: OpenAI Codex CLI, Google Gemini CLI, GitHub Copilot CLI, opencode a od verze 1.4.0 také xAI Grok Build CLI.</p>
-<figure><img src="img/09-codex.png" alt=""><figcaption>Obrázek 4 – Profily OpenAI Codex CLI</figcaption></figure>
+<figure><img src="img/09-codex.png" alt=""><figcaption>Obrázek 5 – Profily OpenAI Codex CLI</figcaption></figure>
 
 <h2 id="dalsi-princip">Princip oddělení</h2>
 <p>Každý nástroj má zdokumentovanou proměnnou prostředí, která přesměruje jeho uživatelská data do jiného adresáře. Správce ji nastaví jen pro spuštěný proces, takže výchozí instalace nástroje zůstává nedotčená. Profily dalších nástrojů mají vlastní registr; jméno <i>pracovni</i> tak může existovat současně u Claude, Codexu i opencode.</p>
@@ -289,7 +294,7 @@
 </table>
 
 <h2 id="dalsi-prace">Práce s profily</h2>
-<figure class="medium"><img src="img/10-opencode.png" alt=""><figcaption>Obrázek 5 – Profily opencode</figcaption></figure>
+<figure class="medium"><img src="img/10-opencode.png" alt=""><figcaption>Obrázek 6 – Profily opencode</figcaption></figure>
 <ol class="steps">
   <li>V postranním panelu otevřete sekci <span class="ui">Další AI nástroje</span> a vyberte nástroj. Pokud nebyl nalezen spustitelný soubor, obrazovka ukáže doporučený způsob instalace; cestu můžete nastavit i ručně.</li>
   <li><span class="ui">Nový profil</span> vytvoří prázdný kořen v <code>INSTALL_DIR/tools/NASTROJ/NAZEV</code> (lze zvolit jiný adresář). <span class="ui">Zaregistrovat existující</span> převezme stávající data bez kopírování – např. <code>~/.codex</code> nebo <code>~/.copilot</code>. U Gemini registrujte adresář obsahující <code>.gemini</code>; samotný domovský adresář registrovat nelze. opencode podporuje jen spravované profily, protože výchozí data leží ve čtyřech různých adresářích.</li>
@@ -300,11 +305,11 @@
 </ol>
 <div class="note"><b>Příkazová řádka</b><code>tool-list</code>, <code>tool-create</code>, <code>tool-register</code>, <code>tool-unregister</code>, <code>tool-set-binary</code>, <code>tool-auth-env</code>, <code>tool-launchers</code>, <code>tool-run</code>, <code>tool-backup</code>, <code>tool-verify</code>, <code>tool-restore</code>, <code>tool-migrate</code>, <code>tool-migrate-backup</code>, <code>tool-export</code>, <code>tool-import</code>. Příklad: <code>claude-manager.py tool-create codex pracovni --yes</code>.</div>
 
-<figure class="medium"><img src="img/12-grok.png" alt=""><figcaption>Obrázek 6 – Profily xAI Grok Build CLI</figcaption></figure>
+<figure class="medium"><img src="img/12-grok.png" alt=""><figcaption>Obrázek 7 – Profily xAI Grok Build CLI</figcaption></figure>
 <div class="warn"><b>Pozor na stejné jméno</b><code>brew install grok</code> instaluje nesouvisející nástroj pro regulární výrazy. Správce proto hledá Grok Build CLI nejprve v <code>~/.grok/bin/grok</code> (umístění oficiálního instalátoru) a teprve potom v PATH. Grok Build lze z Homebrew nainstalovat jako <code>brew install --cask grok-build</code>.</div>
 
 <h2 id="dalsi-migrace">Migrace a přenos mezi Macy</h2>
-<figure class="small"><img src="img/11-migrace-nastroje.png" alt=""><figcaption>Obrázek 7 – Migrace mezi profily Codexu</figcaption></figure>
+<figure class="small"><img src="img/11-migrace-nastroje.png" alt=""><figcaption>Obrázek 8 – Migrace mezi profily Codexu</figcaption></figure>
 <p>Tlačítko <span class="ui">Migrace…</span> zkopíruje vybrané části jednoho profilu nástroje do jiného profilu téhož nástroje. Postup je stejný jako u Claude: nejprve <span class="ui">Zkouška nanečisto</span>, která připraví a zkontroluje staging a vypíše počty souborů a konflikty, potom <span class="ui">Provést migraci</span> – před zápisem se cíl zazálohuje a přepnutí proběhne transakčně.</p>
 <table>
   <tr><th style="width:22%">Třída souborů</th><th>Co do ní patří</th><th style="width:22%">Kopíruje se</th></tr>
@@ -334,7 +339,7 @@
 
 <!-- 6 -->
 <h1 id="zalohy"><span class="num">6</span>Zálohy a přenos na jiný Mac</h1>
-<figure><img src="img/04-zalohy.png" alt=""><figcaption>Obrázek 8 – Seznam záloh s akcemi pro vybranou zálohu</figcaption></figure>
+<figure><img src="img/04-zalohy.png" alt=""><figcaption>Obrázek 9 – Seznam záloh s akcemi pro vybranou zálohu</figcaption></figure>
 <p>Obrazovka zobrazuje všechny zálohy a importy v <code>INSTALL_DIR/backups</code> s datem, profilem, rozsahem a počtem položek. Po výběru řádku se ve spodní liště zpřístupní akce; stejné akce nabízí kontextová nabídka.</p>
 
 <h2>Vytvoření zálohy</h2>
@@ -362,7 +367,7 @@
 
 <!-- 7 -->
 <h1 id="migrace"><span class="num">7</span>Migrace mezi profily</h1>
-<figure><img src="img/05-migrace.png" alt=""><figcaption>Obrázek 9 – Formulář migrace s vybraným zdrojem a cílem</figcaption></figure>
+<figure><img src="img/05-migrace.png" alt=""><figcaption>Obrázek 10 – Formulář migrace s vybraným zdrojem a cílem</figcaption></figure>
 <p>Migrace přenáší vybrané komponenty z jednoho profilu (nebo ze zálohy) do jiného profilu. Probíhá vždy ve dvou krocích, které ukazuje ukazatel v horní části obrazovky:</p>
 <ol class="steps">
   <li><b>Zkouška nanečisto (dry-run).</b> Správce připraví a ověří staging, zkontroluje konflikty a vypíše výsledek. Profily se nemění. Zkouška může vyžadovat značné místo na disku.</li>
@@ -390,7 +395,7 @@
 
 <!-- 8 -->
 <h1 id="projekty"><span class="num">8</span>Projekty</h1>
-<figure><img src="img/06-projekty.png" alt=""><figcaption>Obrázek 10 – Evidence a kopírování projektů</figcaption></figure>
+<figure><img src="img/06-projekty.png" alt=""><figcaption>Obrázek 11 – Evidence a kopírování projektů</figcaption></figure>
 <h2>Evidence projektu</h2>
 <p><span class="ui">Přidat existující projekt do profilu</span> pouze zaeviduje existující adresář u zvoleného profilu. Nic se nekopíruje.</p>
 <h2>Kopírování projektu</h2>
@@ -400,7 +405,7 @@
 
 <!-- 9 -->
 <h1 id="prostredi"><span class="num">9</span>Prostředí a diagnostika</h1>
-<figure class="medium"><img src="img/07-prostredi.png" alt=""><figcaption>Obrázek 11 – Prostředí a diagnostika</figcaption></figure>
+<figure class="medium"><img src="img/07-prostredi.png" alt=""><figcaption>Obrázek 12 – Prostředí a diagnostika</figcaption></figure>
 <h2>Cesty ke Claude CLI a Claude Desktop</h2>
 <p><b>Claude Code CLI:</b> zadejte absolutní cestu ke <b>skutečnému</b> spustitelnému souboru <code>claude</code>. Tlačítko <span class="ui">Najít</span> zjistí <code>command -v claude</code> v přihlašovacím shellu; pokud nalezený soubor vede na tohoto správce, aplikace ho odmítne (ochrana proti rekurzi). Uložení cestu ověří.</p>
 <p><b>Claude Desktop:</b> výchozí je <code>/Applications/Claude.app</code>. Pokud máte aplikaci jinde (např. v <code>~/Applications</code>), vyberte ji a uložte. Správce ověří, že jde o balíček Claude.app.</p>
@@ -413,7 +418,7 @@
 
 <!-- 10 -->
 <h1 id="protokol"><span class="num">10</span>Protokol činností</h1>
-<figure><img src="img/08-protokol.png" alt=""><figcaption>Obrázek 12 – Protokol činností</figcaption></figure>
+<figure><img src="img/08-protokol.png" alt=""><figcaption>Obrázek 13 – Protokol činností</figcaption></figure>
 <p>Protokol zaznamenává každý příkaz, který aplikace předala <code>claude-manager.py</code> – přesný příkazový řádek, návratový kód, výstup a chybový výstup. Slouží k:</p>
 <ul>
   <li>kontrole, co přesně aplikace provedla (transparentnost),</li>
@@ -514,6 +519,7 @@
 <h1 id="verze" class="cont"><span class="num">15</span>Historie verzí</h1>
 <table>
   <tr><th style="width:16%">Verze</th><th>Změny</th></tr>
+  <tr><td><b>1.5.0</b><br>listopad 2026</td><td>Nové logo a ikona aplikace, nový vzhled: barevné odznaky profilů a nástrojů, postranní panel s logem a verzí, hlavička přehledu se souhrnem, dlaždice dalších AI nástrojů, jednotné karty a záhlaví obrazovek, podpora tmavého režimu. Příručka v novém vizuálním stylu.</td></tr>
   <tr><td><b>1.4.0</b><br>listopad 2026</td><td>Podpora xAI Grok Build CLI: profily přes <code>GROK_HOME</code>, oddělené přihlášení, spouštěče <code>grok-NAZEV</code>, zálohy, migrace a přenos; vypnuté automatické aktualizace v profilech, přednost oficiálního umístění programu před nesouvisejícím <code>grok</code> z Homebrew.</td></tr>
   <tr><td><b>1.3.0</b><br>listopad 2026</td><td>Migrace mezi profily dalších AI nástrojů (nastavení, historie, volitelně přihlášení) se zkouškou nanečisto, export a import jejich záloh pro přenos na jiný Mac, balíček vydání s aplikací a nápovědou.</td></tr>
   <tr><td><b>1.2.0</b><br>listopad 2026</td><td>Profily pro OpenAI Codex CLI, Google Gemini CLI, GitHub Copilot CLI a opencode: vytvoření, registrace, spouštěče <code>NASTROJ-NAZEV</code>, oddělení autentizačních proměnných, zálohy a obnova. Nativní grafická aplikace pro macOS s nápovědou v PDF a zobrazením verze aplikace i správce.</td></tr>

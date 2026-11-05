@@ -1,6 +1,8 @@
+<p align="center"><img src="docs/logo.png" width="128" alt="Claude Profile Manager"></p>
+
 # Claude Profile Manager pro macOS
 
-Samostatný správce profilů pro Claude Code CLI a Claude Desktop, verze 1.4.0. Přímé spuštění `claude-manager.py` otevře textovou administraci v terminálu; symlinky `claude-NAME` místo menu spustí skutečné Claude CLI s odpovídajícím `CLAUDE_CONFIG_DIR` a všemi původními argumenty.
+Samostatný správce profilů pro Claude Code CLI a Claude Desktop, verze 1.5.0. Přímé spuštění `claude-manager.py` otevře textovou administraci v terminálu; symlinky `claude-NAME` místo menu spustí skutečné Claude CLI s odpovídajícím `CLAUDE_CONFIG_DIR` a všemi původními argumenty.
 
 Balíček nic sám neinstaluje do tvého Macu. Instalace vyžaduje macOS, Python 3.9+ a existující Claude CLI/Claude.app; vlastní správce používá pouze standardní knihovnu Pythonu a pro práci s GUI Git registry také systémový `git`.
 

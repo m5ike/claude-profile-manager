@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Profile Manager logo: three stacked, separated profile cards; the front one is a terminal. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="0.55" stop-color="#4338CA"/>
+      <stop offset="1" stop-color="#1E1B4B"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.3" cy="0.2" r="0.75">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E0E7FF"/>
+    </linearGradient>
+    <linearGradient id="prompt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#0B0A2A" flood-opacity="0.45"/>
+    </filter>
+    <filter id="iconShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <!-- macOS icon grid: 824 pt body inside a 1024 canvas -->
+  <g filter="url(#iconShadow)">
+    <rect x="100" y="100" width="824" height="824" rx="186" fill="url(#bg)"/>
+  </g>
+  <rect x="100" y="100" width="824" height="824" rx="186" fill="url(#glow)"/>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="184.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="3"/>
+
+  <g transform="translate(18 6)">
+  <!-- Back card (amber profile) -->
+  <g filter="url(#shadow)" transform="rotate(-8 400 360)">
+    <rect x="222" y="232" width="440" height="300" rx="52" fill="#C7D2FE" fill-opacity="0.55"/>
+    <circle cx="290" cy="300" r="26" fill="#FBBF24"/>
+  </g>
+  <!-- Middle card (teal profile) -->
+  <g filter="url(#shadow)" transform="rotate(-4 470 450)">
+    <rect x="272" y="322" width="440" height="300" rx="52" fill="#E0E7FF" fill-opacity="0.82"/>
+    <circle cx="340" cy="390" r="26" fill="#2DD4BF"/>
+  </g>
+  <!-- Front card: terminal -->
+  <g filter="url(#shadow)">
+    <rect x="322" y="432" width="440" height="300" rx="52" fill="url(#front)"/>
+    <circle cx="390" cy="494" r="13" fill="#F87171"/>
+    <circle cx="430" cy="494" r="13" fill="#FBBF24"/>
+    <circle cx="470" cy="494" r="13" fill="#34D399"/>
+    <path d="M392 568 L462 618 L392 668" fill="none" stroke="url(#prompt)" stroke-width="36"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="512" y1="668" x2="628" y2="668" stroke="url(#prompt)" stroke-width="36" stroke-linecap="round"/>
+  </g>
+  </g>
+</svg>

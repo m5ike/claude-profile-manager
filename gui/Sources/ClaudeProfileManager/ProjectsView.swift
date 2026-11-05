@@ -11,7 +11,7 @@ struct ProjectsView: View {
     private var args: [String] { ["project-copy", profile, source, destination] }
 
     var body: some View {
-        Page(title: "Projekty", subtitle: "Evidence projektových adresářů a bezpečné kopírování projektu pro jiný profil.") {
+        Page(title: "Projekty", subtitle: "Evidence projektových adresářů a bezpečné kopírování projektu pro jiný profil.", symbol: "folder.fill", tint: Color(hex: 0x2563EB)) {
             Card(title: "Evidované projekty", systemImage: "folder") {
                 if store.config.profiles.allSatisfy({ $0.projects.isEmpty }) {
                     Text("Žádný profil zatím nemá evidovaný projekt.").foregroundStyle(.secondary)

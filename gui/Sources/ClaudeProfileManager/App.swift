@@ -18,6 +18,7 @@ struct ClaudeProfileManagerApp: App {
         WindowGroup("Claude Profile Manager") {
             ContentView()
                 .environmentObject(store)
+                .tint(Brand.accent)
                 .frame(minWidth: 980, minHeight: 640)
         }
         .windowToolbarStyle(.unified)

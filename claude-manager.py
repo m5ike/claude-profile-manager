@@ -22,7 +22,7 @@ import time
 import uuid
 from pathlib import Path
 
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 SCRIPT = Path(__file__).resolve()
 ROOT = SCRIPT.parent
 NAME_RE = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")

@@ -9,7 +9,7 @@ struct EnvironmentView: View {
     @State private var doctorJSON = ""
 
     var body: some View {
-        Page(title: "Prostředí a diagnostika", subtitle: "Cesty ke Claude, PATH v shellu a kontrola stavu instalace.") {
+        Page(title: "Prostředí a diagnostika", subtitle: "Cesty ke Claude, PATH v shellu a kontrola stavu instalace.", symbol: "stethoscope", tint: Color(hex: 0x059669)) {
             Card(title: "Claude Code CLI", systemImage: "terminal") {
                 Text("Absolutní cesta ke skutečnému spustitelnému souboru claude – ne k symlinku na tohoto správce.")
                     .font(.callout).foregroundStyle(.secondary)

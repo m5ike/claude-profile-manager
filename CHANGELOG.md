@@ -1,5 +1,19 @@
 # Historie verzí
 
+## 1.5.0 – 2026-11-05
+
+### Přidáno
+- **Logo a ikona aplikace** – vektorový zdroj `gui/Resources/Logo.svg` (vrstvené karty profilů
+  s terminálem na indigovém podkladu); `build-app.sh` z něj generuje `AppIcon.icns`, PNG je v `docs/logo.png`.
+- **Nový vzhled aplikace** – sdílený design systém (`Theme.swift`): značková paleta, barevné odznaky pro
+  typy profilů a jednotlivé nástroje, postranní panel s logem a verzí, hlavička přehledu se souhrnem,
+  dlaždice dalších AI nástrojů, jednotné karty a záhlaví obrazovek, ověřený světlý i tmavý režim.
+- Snapshot režim umí `-snapshotAppearance dark`.
+
+### Změněno
+- Příručka v novém vizuálním stylu (indigová barva, nové logo na titulní straně) s oddílem o vzhledu
+  a tmavém režimu; aktualizované snímky obrazovky.
+
 ## 1.4.0 – 2026-11-05
 
 ### Přidáno

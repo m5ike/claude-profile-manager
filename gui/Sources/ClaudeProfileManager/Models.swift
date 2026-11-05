@@ -220,6 +220,27 @@ struct ToolInfo: Identifiable, Hashable {
     /// Fixed sidebar order; also used before the backend answers.
     static let order = ["codex", "gemini", "copilot", "opencode", "grok"]
 
+    /// Short label for compact tiles.
+    var shortName: String {
+        switch id {
+        case "codex": return "Codex"
+        case "gemini": return "Gemini"
+        case "copilot": return "Copilot"
+        case "grok": return "Grok Build"
+        default: return title
+        }
+    }
+
+    var vendor: String {
+        switch id {
+        case "codex": return "OpenAI"
+        case "gemini": return "Google"
+        case "copilot": return "GitHub"
+        case "grok": return "xAI"
+        default: return "open source"
+        }
+    }
+
     var symbol: String {
         switch id {
         case "codex": return "chevron.left.forwardslash.chevron.right"

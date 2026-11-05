@@ -11,9 +11,9 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$(swift build -c release --show-bin-path)/ClaudeProfileManager" "$APP/Contents/MacOS/ClaudeProfileManager"
 
-if [ ! -f Resources/AppIcon.icns ]; then
+if [ ! -f Resources/AppIcon.icns ] || [ Resources/Logo.svg -nt Resources/AppIcon.icns ]; then
   tmp="$(mktemp -d)"
-  swift scripts/make-icon.swift "$tmp/icon.png"
+  swift scripts/make-icon.swift Resources/Logo.svg "$tmp/icon.png" 1024
   mkdir "$tmp/AppIcon.iconset"
   for s in 16 32 128 256 512; do
     sips -z $s $s "$tmp/icon.png" --out "$tmp/AppIcon.iconset/icon_${s}x${s}.png" >/dev/null
@@ -23,6 +23,7 @@ if [ ! -f Resources/AppIcon.icns ]; then
   rm -rf "$tmp"
 fi
 cp Resources/AppIcon.icns "$APP/Contents/Resources/"
+cp Resources/Logo.svg "$APP/Contents/Resources/"
 [ -f ../docs/Napoveda.pdf ] && cp ../docs/Napoveda.pdf "$APP/Contents/Resources/"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
