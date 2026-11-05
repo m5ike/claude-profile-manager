@@ -7,6 +7,8 @@ import SwiftUI
 @MainActor
 enum Snapshotter {
     static var directory: String? { UserDefaults.standard.string(forKey: "snapshotDir") }
+    /// One-shot request for ToolView to open its migration sheet during a snapshot run.
+    static var openToolMigration = false
 
     static func run(store: Store) async {
         guard let dir = directory else { return }
@@ -41,6 +43,14 @@ enum Snapshotter {
             store.selection = item
             try? await Task.sleep(nanoseconds: 900_000_000)
             capture(window, to: "\(dir)/\(name).png")
+            if name == "10-opencode" {
+                openToolMigration = true
+                store.selection = .tool("codex")
+                try? await Task.sleep(nanoseconds: 1_400_000_000)
+                if let sheet = window.attachedSheet { capture(sheet, to: "\(dir)/11-migrace-nastroje.png") }
+                sheet: do { window.attachedSheet.map { window.endSheet($0) } }
+                try? await Task.sleep(nanoseconds: 700_000_000)
+            }
             if name == "02-profil" {
                 store.showNewProfile = true
                 try? await Task.sleep(nanoseconds: 1_000_000_000)

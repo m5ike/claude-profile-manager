@@ -76,7 +76,7 @@
   <p class="title">Claude Profile Manager</p>
   <p class="sub">Uživatelská příručka grafické aplikace pro macOS</p>
   <div class="meta">
-    Verze 1.2.0 · listopad 2026 · macOS 13 Ventura a novější<br>
+    Verze 1.3.0 · listopad 2026 · macOS 13 Ventura a novější<br>
     Oddělené profily Claude Code, Claude Desktop, OpenAI Codex CLI,<br>Google Gemini CLI, GitHub Copilot CLI a opencode na jednom Macu:<br>
     vytváření, spouštění, zálohy, migrace a diagnostika.
   </div>
@@ -93,7 +93,7 @@
     <li><a href="#profily"><span class="n">4</span>Profily</a>
       <ol><li><a href="#typy">Typy profilů</a></li><li><a href="#novy">Nový profil</a></li><li><a href="#registrace">Registrace existujících dat</a></li><li><a href="#detail">Detail profilu</a></li><li><a href="#spousteni">Spouštění CLI a Desktopu</a></li><li><a href="#nastaveni">Úprava nastavení</a></li><li><a href="#zmena-typu">Změna typu profilu</a></li></ol></li>
     <li><a href="#dalsi"><span class="n">5</span>Další AI nástroje (Codex, Gemini, Copilot, opencode)</a>
-      <ol><li><a href="#dalsi-princip">Princip oddělení</a></li><li><a href="#dalsi-prace">Práce s profily</a></li><li><a href="#dalsi-omezeni">Omezení a ověření</a></li></ol></li>
+      <ol><li><a href="#dalsi-princip">Princip oddělení</a></li><li><a href="#dalsi-prace">Práce s profily</a></li><li><a href="#dalsi-migrace">Migrace a přenos</a></li><li><a href="#dalsi-omezeni">Omezení a ověření</a></li></ol></li>
     <li><a href="#zalohy"><span class="n">6</span>Zálohy a přenos na jiný Mac</a></li>
     <li><a href="#migrace"><span class="n">7</span>Migrace mezi profily</a></li>
     <li><a href="#projekty"><span class="n">8</span>Projekty</a></li>
@@ -296,19 +296,40 @@
   <li><span class="ui">Zálohovat</span> vytvoří ověřenou kopii kořene profilu v <code>INSTALL_DIR/tool-backups</code>. <span class="ui">Obnovit…</span> vrátí profil do stavu zálohy; předtím zazálohuje aktuální stav a vyžaduje, aby nástroj neběžel.</li>
   <li><span class="ui">Odebrat z registru</span> profil pouze vyřadí ze správce – adresář s daty zůstává.</li>
 </ol>
-<div class="note"><b>Příkazová řádka</b><code>tool-list</code>, <code>tool-create</code>, <code>tool-register</code>, <code>tool-unregister</code>, <code>tool-set-binary</code>, <code>tool-auth-env</code>, <code>tool-launchers</code>, <code>tool-run</code>, <code>tool-backup</code>, <code>tool-verify</code>, <code>tool-restore</code>. Příklad: <code>claude-manager.py tool-create codex pracovni --yes</code>.</div>
+<div class="note"><b>Příkazová řádka</b><code>tool-list</code>, <code>tool-create</code>, <code>tool-register</code>, <code>tool-unregister</code>, <code>tool-set-binary</code>, <code>tool-auth-env</code>, <code>tool-launchers</code>, <code>tool-run</code>, <code>tool-backup</code>, <code>tool-verify</code>, <code>tool-restore</code>, <code>tool-migrate</code>, <code>tool-migrate-backup</code>, <code>tool-export</code>, <code>tool-import</code>. Příklad: <code>claude-manager.py tool-create codex pracovni --yes</code>.</div>
+
+<h2 id="dalsi-migrace">Migrace a přenos mezi Macy</h2>
+<figure class="small"><img src="img/11-migrace-nastroje.png" alt=""><figcaption>Obrázek 6 – Migrace mezi profily Codexu</figcaption></figure>
+<p>Tlačítko <span class="ui">Migrace…</span> zkopíruje vybrané části jednoho profilu nástroje do jiného profilu téhož nástroje. Postup je stejný jako u Claude: nejprve <span class="ui">Zkouška nanečisto</span>, která připraví a zkontroluje staging a vypíše počty souborů a konflikty, potom <span class="ui">Provést migraci</span> – před zápisem se cíl zazálohuje a přepnutí proběhne transakčně.</p>
+<table>
+  <tr><th style="width:22%">Třída souborů</th><th>Co do ní patří</th><th style="width:22%">Kopíruje se</th></tr>
+  <tr><td><b>Nastavení</b></td><td>vše, co nepatří do ostatních tříd: konfigurace, instrukce (AGENTS.md, GEMINI.md…), skills, agenti, příkazy, MCP, rozšíření</td><td>volba „Nastavení“ (výchozí)</td></tr>
+  <tr><td><b>Historie</b></td><td>Codex: <code>sessions</code>, <code>archived_sessions</code>, <code>history.jsonl</code>, <code>memories</code>; Gemini: <code>.gemini/tmp</code>, <code>.gemini/history</code>; Copilot: <code>session-state</code>, <code>session-store.db</code>, <code>command-history-state</code>; opencode: <code>data</code>, <code>state</code>; u všech také databáze SQLite</td><td>volba „Historie“</td></tr>
+  <tr><td><b>Přihlášení</b></td><td>Codex <code>auth.json</code>; Gemini <code>oauth_creds.json</code>, <code>google_accounts.json</code>, tokeny MCP, <code>.env</code>; Copilot <code>config.json</code>, <code>providers.json</code>, <code>permissions-config.json</code>, <code>mcp-oauth-config</code>, <code>mcp-secrets</code>; opencode <code>auth.json</code>, <code>mcp-auth.json</code></td><td>jen s volbou <code>--credentials</code></td></tr>
+  <tr><td><b>Dočasné</b></td><td>logy, <code>tmp</code>, cache, data integrace IDE</td><td>nikdy</td></tr>
+</table>
+<p>Symbolické odkazy se kopírují jako odkazy, nikdy se nenásledují. U Codexu si cíl vždy ponechá svou hodnotu <code>cli_auth_credentials_store</code>, i když zdroj ukládá přihlášení jinam. Konflikty se řeší stejně jako u Claude: <i>Zastavit</i>, <i>Ponechat cílový</i> nebo <i>Nahradit zdrojem</i>.</p>
+<h3>Přenos na jiný Mac</h3>
+<ol class="steps">
+  <li>U zálohy nástroje zvolte <span class="ui">Export…</span>. Vznikne archiv <code>.tar.gz</code> a soubor <code>.sha256</code>; absolutní odkazy uvnitř profilu se převedou na relativní, odkazy mimo profil export odmítne.</li>
+  <li>Na druhém Macu otevřete obrazovku stejného nástroje a zvolte <span class="ui">Importovat archiv…</span> s důvěryhodným kontrolním součtem. Import pouze ověří a rozbalí zálohu do <code>INSTALL_DIR/tool-backups</code>.</li>
+  <li>Vytvořte cílový profil a u importované zálohy zvolte <span class="ui">Migrovat…</span>. Přesná obnova je možná jen do profilu se stejnou původní cestou.</li>
+</ol>
+<div class="note"><b>Příkazová řádka</b><code>tool-migrate codex osobni pracovni --components settings,history</code> (zkouška) a totéž s <code>--apply --yes</code>; <code>tool-export ZALOHA ARCHIV</code>, <code>tool-import ARCHIV --sha256 …</code>, <code>tool-migrate-backup ZALOHA CIL</code>.</div>
 
 <h2 id="dalsi-omezeni">Omezení a ověření</h2>
 <ul>
   <li>Chování bylo ověřeno proti aktuální dokumentaci výrobců (listopad 2026): developers.openai.com/codex (CODEX_HOME, cli_auth_credentials_store, CODEX_API_KEY), geminicli.com (GEMINI_CLI_HOME, autentizace), docs.github.com (adresář konfigurace Copilot CLI, pořadí tokenů) a opencode.ai (konfigurace, umístění dat).</li>
   <li>opencode bylo navíc ověřeno spuštěním skutečné verze 2.2.5 přes spouštěč profilu. Codex, Gemini a Copilot CLI na testovacím Macu nainstalované nebyly; jejich spouštění je ověřeno automatickými testy s náhradním programem, ne s reálnými účty.</li>
   <li>Klíčenka macOS je sdílená pro celého uživatele. U Gemini CLI (přihlášení Google účtem) a Copilot CLI proto oddělení přihlášení závisí na tom, jak nástroj ukládá tokeny. Po prvním přihlášení vždy ověřte účet v každém profilu.</li>
-  <li>Datové operace (záloha, obnova) odmítnou pokračovat, pokud daný nástroj běží. Migrace mezi profily dalších nástrojů zatím není k dispozici – použijte zálohu a obnovu, nebo kopírujte konkrétní soubory ručně.</li>
+  <li>Datové operace (záloha, obnova, migrace) odmítnou pokračovat, pokud daný nástroj běží.</li>
+  <li>Rozložení adresářů se mezi verzemi nástrojů mění a dokumentace výrobců ho popisuje jen částečně. Migrace proto kopíruje vše kromě výslovně vyloučených tříd; novou, dosud neznámou úložnou cestu přihlášení by zařadila mezi nastavení. Po migraci vždy ověřte, že je v cílovém profilu přihlášený správný účet.</li>
+  <li>Historie se nepřemapovává: sezení odkazují na projektové cesty, které musí na cílovém Macu existovat.</li>
 </ul>
 
 <!-- 6 -->
 <h1 id="zalohy"><span class="num">6</span>Zálohy a přenos na jiný Mac</h1>
-<figure><img src="img/04-zalohy.png" alt=""><figcaption>Obrázek 6 – Seznam záloh s akcemi pro vybranou zálohu</figcaption></figure>
+<figure><img src="img/04-zalohy.png" alt=""><figcaption>Obrázek 7 – Seznam záloh s akcemi pro vybranou zálohu</figcaption></figure>
 <p>Obrazovka zobrazuje všechny zálohy a importy v <code>INSTALL_DIR/backups</code> s datem, profilem, rozsahem a počtem položek. Po výběru řádku se ve spodní liště zpřístupní akce; stejné akce nabízí kontextová nabídka.</p>
 
 <h2>Vytvoření zálohy</h2>
@@ -336,7 +357,7 @@
 
 <!-- 7 -->
 <h1 id="migrace"><span class="num">7</span>Migrace mezi profily</h1>
-<figure><img src="img/05-migrace.png" alt=""><figcaption>Obrázek 7 – Formulář migrace s vybraným zdrojem a cílem</figcaption></figure>
+<figure><img src="img/05-migrace.png" alt=""><figcaption>Obrázek 8 – Formulář migrace s vybraným zdrojem a cílem</figcaption></figure>
 <p>Migrace přenáší vybrané komponenty z jednoho profilu (nebo ze zálohy) do jiného profilu. Probíhá vždy ve dvou krocích, které ukazuje ukazatel v horní části obrazovky:</p>
 <ol class="steps">
   <li><b>Zkouška nanečisto (dry-run).</b> Správce připraví a ověří staging, zkontroluje konflikty a vypíše výsledek. Profily se nemění. Zkouška může vyžadovat značné místo na disku.</li>
@@ -364,7 +385,7 @@
 
 <!-- 8 -->
 <h1 id="projekty"><span class="num">8</span>Projekty</h1>
-<figure><img src="img/06-projekty.png" alt=""><figcaption>Obrázek 8 – Evidence a kopírování projektů</figcaption></figure>
+<figure><img src="img/06-projekty.png" alt=""><figcaption>Obrázek 9 – Evidence a kopírování projektů</figcaption></figure>
 <h2>Evidence projektu</h2>
 <p><span class="ui">Přidat existující projekt do profilu</span> pouze zaeviduje existující adresář u zvoleného profilu. Nic se nekopíruje.</p>
 <h2>Kopírování projektu</h2>
@@ -374,7 +395,7 @@
 
 <!-- 9 -->
 <h1 id="prostredi"><span class="num">9</span>Prostředí a diagnostika</h1>
-<figure class="medium"><img src="img/07-prostredi.png" alt=""><figcaption>Obrázek 9 – Prostředí a diagnostika</figcaption></figure>
+<figure class="medium"><img src="img/07-prostredi.png" alt=""><figcaption>Obrázek 10 – Prostředí a diagnostika</figcaption></figure>
 <h2>Cesty ke Claude CLI a Claude Desktop</h2>
 <p><b>Claude Code CLI:</b> zadejte absolutní cestu ke <b>skutečnému</b> spustitelnému souboru <code>claude</code>. Tlačítko <span class="ui">Najít</span> zjistí <code>command -v claude</code> v přihlašovacím shellu; pokud nalezený soubor vede na tohoto správce, aplikace ho odmítne (ochrana proti rekurzi). Uložení cestu ověří.</p>
 <p><b>Claude Desktop:</b> výchozí je <code>/Applications/Claude.app</code>. Pokud máte aplikaci jinde (např. v <code>~/Applications</code>), vyberte ji a uložte. Správce ověří, že jde o balíček Claude.app.</p>
@@ -387,7 +408,7 @@
 
 <!-- 10 -->
 <h1 id="protokol"><span class="num">10</span>Protokol činností</h1>
-<figure><img src="img/08-protokol.png" alt=""><figcaption>Obrázek 10 – Protokol činností</figcaption></figure>
+<figure><img src="img/08-protokol.png" alt=""><figcaption>Obrázek 11 – Protokol činností</figcaption></figure>
 <p>Protokol zaznamenává každý příkaz, který aplikace předala <code>claude-manager.py</code> – přesný příkazový řádek, návratový kód, výstup a chybový výstup. Slouží k:</p>
 <ul>
   <li>kontrole, co přesně aplikace provedla (transparentnost),</li>
@@ -465,7 +486,7 @@
   <tr><td>Export / import</td><td><code>export ZALOHA ARCHIV</code>, <code>import ARCHIV --sha256 …</code></td></tr>
   <tr><td>Migrace</td><td><code>migrate</code> / <code>migrate-backup</code> (+ <code>--apply --yes</code>)</td></tr>
   <tr><td>Projekty</td><td><code>project-add</code>, <code>project-copy</code> (+ <code>--apply --yes</code>)</td></tr>
-  <tr><td>Další AI nástroje</td><td><code>tool-create</code>, <code>tool-register</code>, <code>tool-run</code>, <code>tool-launchers</code>, <code>tool-backup</code>, <code>tool-restore</code>, <code>tool-auth-env</code></td></tr>
+  <tr><td>Další AI nástroje</td><td><code>tool-create</code>, <code>tool-register</code>, <code>tool-run</code>, <code>tool-launchers</code>, <code>tool-backup</code>, <code>tool-restore</code>, <code>tool-auth-env</code>, <code>tool-migrate</code>, <code>tool-migrate-backup</code>, <code>tool-export</code>, <code>tool-import</code></td></tr>
   <tr><td>Prostředí</td><td><code>set-binary</code>, <code>set-gui-app</code>, <code>path --write --yes</code>, <code>doctor</code>, <code>recover</code></td></tr>
 </table>
 
@@ -488,6 +509,7 @@
 <h1 id="verze" class="cont"><span class="num">15</span>Historie verzí</h1>
 <table>
   <tr><th style="width:16%">Verze</th><th>Změny</th></tr>
+  <tr><td><b>1.3.0</b><br>listopad 2026</td><td>Migrace mezi profily dalších AI nástrojů (nastavení, historie, volitelně přihlášení) se zkouškou nanečisto, export a import jejich záloh pro přenos na jiný Mac, balíček vydání s aplikací a nápovědou.</td></tr>
   <tr><td><b>1.2.0</b><br>listopad 2026</td><td>Profily pro OpenAI Codex CLI, Google Gemini CLI, GitHub Copilot CLI a opencode: vytvoření, registrace, spouštěče <code>NASTROJ-NAZEV</code>, oddělení autentizačních proměnných, zálohy a obnova. Nativní grafická aplikace pro macOS s nápovědou v PDF a zobrazením verze aplikace i správce.</td></tr>
   <tr><td><b>1.1.0</b></td><td>Typy profilů CLI / Desktop / obojí, aktualizátor <code>update.sh</code> s obnovou, editor nastavení.</td></tr>
   <tr><td><b>1.0.0</b></td><td>První verze: kombinované profily Claude CLI a Desktop, zálohy, migrace, kopírování projektů.</td></tr>

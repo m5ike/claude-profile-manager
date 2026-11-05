@@ -22,7 +22,7 @@ import time
 import uuid
 from pathlib import Path
 
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 SCRIPT = Path(__file__).resolve()
 ROOT = SCRIPT.parent
 NAME_RE = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
@@ -78,6 +78,37 @@ TOOLS = {
                      "XAI_API_KEY", "MISTRAL_API_KEY", "DEEPSEEK_API_KEY"),
     },
 }
+
+# Migration classes. "credentials" (logins, tokens, saved permissions) are copied only with
+# --credentials; "ephemeral" (logs, temp, caches) is never copied; "history" also covers any
+# SQLite database; everything else is "settings". Exclusion lists rather than allowlists, because
+# vendors add new configuration files more often than new credential stores.
+TOOL_MIGRATION = {
+    "codex": {
+        "credentials": ("auth.json",),
+        "history": ("sessions", "archived_sessions", "history.jsonl", "memories"),
+        "ephemeral": ("log", "logs", "tmp", ".tmp", "cache", ".cache"),
+    },
+    "gemini": {
+        "credentials": (".gemini/oauth_creds.json", ".gemini/google_accounts.json",
+                        ".gemini/mcp-oauth-tokens.json", ".gemini/mcp-oauth-tokens-v2.json",
+                        ".gemini/.env"),
+        "history": (".gemini/tmp", ".gemini/history"),
+        "ephemeral": (".gemini/logs", ".gemini/cache"),
+    },
+    "copilot": {
+        "credentials": ("config.json", "providers.json", "permissions-config.json",
+                        "mcp-oauth-config", "mcp-secrets"),
+        "history": ("session-state", "session-store.db", "command-history-state"),
+        "ephemeral": ("logs", "ide"),
+    },
+    "opencode": {
+        "credentials": ("data/opencode/auth.json", "data/opencode/mcp-auth.json"),
+        "history": ("data", "state"),
+        "ephemeral": ("data/opencode/log",),
+    },
+}
+TOOL_COMPONENTS = ("settings", "history")
 
 
 class Error(Exception):
@@ -1115,14 +1146,18 @@ class Manager:
 
     def export(self, backup, output):
         manifest = copy.deepcopy(self.verify(backup))
+        return self.portable_archive(backup, output, manifest, manifest["files"], manifest["roots"])
+
+    def portable_archive(self, backup, output, manifest, files_by_kind, roots_by_kind):
+        """Write manifest + payload dirs as .tar.gz; absolute in-tree links become relative."""
         portable_links = {}
-        for kind, files in manifest["files"].items():
+        for kind, files in files_by_kind.items():
             for rel, info in files.items():
                 if info["type"] != "link":
                     continue
                 target = info["target"]
                 if os.path.isabs(target):
-                    original = manifest["roots"].get(kind)
+                    original = roots_by_kind.get(kind)
                     if not original:
                         fail("Unportable absolute symlink in auxiliary state")
                     try:
@@ -1170,12 +1205,17 @@ class Manager:
         return output
 
     def import_archive(self, archive, expected_sha256, max_bytes=20 * 1024**3):
+        return self.extract_archive(archive, expected_sha256, "backups",
+                                    {"manifest.json", "cli", "gui", "default-home-state"},
+                                    self.verify, max_bytes)
+
+    def extract_archive(self, archive, expected_sha256, folder, tops, verify, max_bytes=20 * 1024**3):
         archive = safe_abs(archive)
         if not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
             fail("Provide trusted --sha256 (64 lowercase hex characters).")
         if digest(archive) != expected_sha256:
             fail("Archive SHA-256 mismatch")
-        base = safe_abs(self.root / "backups")
+        base = safe_abs(self.root / folder)
         base.mkdir(mode=0o700, exist_ok=True)
         dst = Path(tempfile.mkdtemp(prefix="import-", dir=base))
         total = 0
@@ -1185,8 +1225,7 @@ class Manager:
                 for member in tar:
                     rel = Path(member.name)
                     if (rel.is_absolute() or ".." in rel.parts or not rel.parts or
-                            member.name in seen or rel.parts[0] not in
-                            {"manifest.json", "cli", "gui", "default-home-state"}):
+                            member.name in seen or rel.parts[0] not in tops):
                         fail(f"Unsafe/duplicate archive path: {member.name}")
                     seen.add(member.name)
                     if len(seen) > 200000:
@@ -1220,7 +1259,7 @@ class Manager:
                         target.symlink_to(member.linkname)
                     else:
                         fail("Hardlinks, devices and FIFOs are refused in imports")
-            self.verify(dst)
+            verify(dst)
             return dst
         except BaseException:
             shutil.rmtree(dst)
@@ -1562,6 +1601,104 @@ class Manager:
         self.transaction([(root, stage)])
         return current
 
+    def tool_classify(self, tool, rel):
+        rules = TOOL_MIGRATION[tool]
+        def under(prefixes):
+            return any(rel == p or rel.startswith(p + "/") for p in prefixes)
+        if under(rules["credentials"]):
+            return "credentials"
+        if under(rules["ephemeral"]):
+            return "ephemeral"
+        if under(rules["history"]) or re.search(r"\.(sqlite3?|db)(-wal|-shm|-journal)?$", rel):
+            return "history"
+        return "settings"
+
+    def tool_plan(self, tool, src, components, credentials):
+        """Files and symlinks (never followed) to copy, with their migration class."""
+        plan = {}
+        for base, dirs, files in os.walk(src, followlinks=False):
+            b = Path(base)
+            entries = files + [d for d in dirs if (b / d).is_symlink()]
+            dirs[:] = sorted(d for d in dirs if not (b / d).is_symlink())
+            for n in entries:
+                p = b / n
+                if not (p.is_symlink() or p.is_file()):
+                    fail(f"Unsupported file type in profile: {p}")
+                rel = p.relative_to(src).as_posix()
+                kind = self.tool_classify(tool, rel)
+                if kind in components or (kind == "credentials" and credentials):
+                    plan[rel] = kind
+        return dict(sorted(plan.items()))
+
+    def tool_migrate(self, tool, source, target, components, conflict="error",
+                     credentials=False, dry_run=True, from_backup=False):
+        self.tool_spec(tool)
+        components = [c for c in components if c]
+        if not components or set(components) - set(TOOL_COMPONENTS):
+            fail("Components must be a non-empty subset of: " + ",".join(TOOL_COMPONENTS))
+        if conflict not in ("error", "keep", "replace"):
+            fail("Conflict must be error, keep or replace")
+        if from_backup:
+            manifest = self.tool_verify(source)
+            if manifest["tool"] != tool:
+                fail(f"Backup belongs to {manifest['tool']}, not {tool}")
+            src = safe_abs(source) / "data"
+            label = str(safe_abs(source))
+        else:
+            if source == target:
+                fail("Source and target must differ")
+            src = self.tool_root(tool, source)
+            label = source
+        dst = self.tool_root(tool, target)
+        if not src.is_dir() or not dst.is_dir():
+            fail("Source and target profile directories must exist")
+        plan = self.tool_plan(tool, src, components, credentials)
+        conflicts = [rel for rel in plan if exists(dst / rel) and not equal(src / rel, dst / rel)]
+        if conflicts and conflict == "error":
+            fail(f"{len(conflicts)} conflict(s), e.g. {', '.join(conflicts[:5])}. "
+                 "Use --conflict keep or replace explicitly.")
+        self.tool_cold(tool)
+        auth_line = None
+        if tool == "codex" and (dst / "config.toml").is_file():
+            for line in (dst / "config.toml").read_text(encoding="utf-8").splitlines():
+                if re.match(r"\s*cli_auth_credentials_store\s*=", line):
+                    auth_line = line.strip()
+        stage = self.stage(dst)
+        try:
+            for rel in plan:
+                overlay(src / rel, stage / rel, conflict)
+            if auth_line and (stage / "config.toml").is_file():
+                # The target keeps its own credential store, whatever the source used.
+                lines = [l for l in (stage / "config.toml").read_text(encoding="utf-8").splitlines()
+                         if not re.match(r"\s*cli_auth_credentials_store\s*=", l)]
+                atomic_bytes(stage / "config.toml", ("\n".join([auth_line, *lines]) + "\n").encode())
+            counts = {}
+            for kind in plan.values():
+                counts[kind] = counts.get(kind, 0) + 1
+            report = {"tool": tool, "source": label, "target": target, "dry_run": dry_run,
+                      "components": components, "credentials_copied": credentials,
+                      "conflict_policy": conflict, "files": len(plan), "by_class": counts,
+                      "conflicts": conflicts[:100], "conflict_count": len(conflicts),
+                      "kept_target_auth_store": bool(auth_line)}
+            if dry_run:
+                return report
+            report["target_backup"] = str(self.tool_backup(tool, target))
+            self.tool_cold(tool)
+            self.transaction([(dst, stage)])
+            return report
+        finally:
+            if stage.exists() and not self.journal.exists():
+                shutil.rmtree(stage)
+
+    def tool_export(self, backup, output):
+        manifest = copy.deepcopy(self.tool_verify(backup))
+        return self.portable_archive(backup, output, manifest, {"data": manifest["files"]},
+                                     {"data": manifest["root"]})
+
+    def tool_import(self, archive, expected_sha256):
+        return self.extract_archive(archive, expected_sha256, "tool-backups",
+                                    {"manifest.json", "data"}, self.tool_verify)
+
     def tool_list(self):
         out = {}
         for tool, spec in TOOLS.items():
@@ -1725,6 +1862,27 @@ def parser():
     s.add_argument("name")
     s.add_argument("backup")
     s.add_argument("--yes", action="store_true")
+    s = sub.add_parser("tool-migrate")
+    s.add_argument("tool", choices=tools)
+    s.add_argument("source", help="Source profile name")
+    s.add_argument("target")
+    s = sub.add_parser("tool-migrate-backup")
+    s.add_argument("backup", help="Verified or imported tool backup directory")
+    s.add_argument("target")
+    for s in (sub.choices["tool-migrate"], sub.choices["tool-migrate-backup"]):
+        s.add_argument("--components", default="settings",
+                       help="Comma list of " + ",".join(TOOL_COMPONENTS))
+        s.add_argument("--conflict", choices=("error", "keep", "replace"), default="error")
+        s.add_argument("--credentials", action="store_true",
+                       help="Also copy logins, tokens and saved permissions")
+        s.add_argument("--apply", action="store_true", help="Default is a staged dry-run.")
+        s.add_argument("--yes", action="store_true")
+    s = sub.add_parser("tool-export")
+    s.add_argument("backup")
+    s.add_argument("output")
+    s = sub.add_parser("tool-import")
+    s.add_argument("archive")
+    s.add_argument("--sha256", required=True)
     s = sub.add_parser("tool-run")
     s.add_argument("tool", choices=tools)
     s.add_argument("name")
@@ -1749,6 +1907,24 @@ def dispatch_tool(m, a):
     if command == "tool-list":
         with m.lock(allow_pending=True):
             return m.tool_list()
+    if command == "tool-export":
+        with m.lock():
+            return {"archive": str(m.tool_export(Path(a.backup), Path(a.output)))}
+    if command == "tool-import":
+        with m.lock():
+            return {"backup": str(m.tool_import(Path(a.archive), a.sha256))}
+    if command in ("tool-migrate", "tool-migrate-backup"):
+        if a.apply:
+            confirm(a, "Migration commits profile changes.")
+        if command == "tool-migrate-backup":
+            tool = m.tool_verify(Path(a.backup))["tool"]
+            names, source = [m.tool_lock_name(tool, a.target)], safe_abs(a.backup)
+        else:
+            tool, source = a.tool, a.source
+            names = [m.tool_lock_name(tool, a.target), m.tool_lock_name(tool, a.source)]
+        with m.lock(names):
+            return m.tool_migrate(tool, source, a.target, a.components.split(","), a.conflict,
+                                  a.credentials, not a.apply, command == "tool-migrate-backup")
     names = [m.tool_lock_name(a.tool, a.name)] if getattr(a, "name", None) else []
     with m.lock(names):
         if command in ("tool-create", "tool-register"):

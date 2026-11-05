@@ -1,5 +1,21 @@
 # Historie verzí
 
+## 1.3.0 – 2026-11-05
+
+### Přidáno
+- `tool-migrate` a `tool-migrate-backup`: kopírování nastavení a historie mezi profily Codex / Gemini /
+  Copilot / opencode, nebo z importované zálohy. Výchozí je zkouška ve stagingu; `--apply --yes` zazálohuje
+  cíl a zapíše transakčně. Přihlášení a uložená oprávnění jen s `--credentials`, logy a cache nikdy.
+  Codex si v cíli ponechá vlastní `cli_auth_credentials_store`.
+- `tool-export` / `tool-import`: přenosné archivy záloh nástrojů s kontrolním součtem SHA-256
+  (stejné zabezpečení rozbalování jako u záloh Claude).
+- Grafická aplikace: dialog Migrace, export a import záloh nástrojů.
+- `gui/make-release.sh`: balíček vydání (skripty, aplikace, nápověda, kontrolní součty).
+
+### Změněno
+- Export/import archivů přepracován na sdílené pomocné funkce pro zálohy Claude i nástrojů.
+- `.gitignore` ignoruje `.DS_Store` a `/dist/`.
+
 ## 1.2.0 – 2026-11-05
 
 ### Přidáno

@@ -15,3 +15,7 @@ __pycache__/
 # macOS GUI build outputs
 /gui/.build/
 /gui/build/
+
+# macOS Finder metadata and release output
+.DS_Store
+/dist/
