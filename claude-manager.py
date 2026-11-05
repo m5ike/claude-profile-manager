@@ -22,7 +22,7 @@ import time
 import uuid
 from pathlib import Path
 
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 SCRIPT = Path(__file__).resolve()
 ROOT = SCRIPT.parent
 NAME_RE = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
@@ -47,7 +47,9 @@ RESET_SESSION = {
 # CODEX_API_KEY); geminicli.com/docs/cli/enterprise + get-started/authentication (GEMINI_CLI_HOME);
 # docs.github.com/copilot/reference/copilot-cli-reference/cli-config-dir-reference + authenticate
 # (COPILOT_HOME, COPILOT_CACHE_HOME, token precedence); opencode.ai/docs/config + troubleshooting
-# (XDG config/data/state/cache dirs, verified with `opencode debug paths`).
+# (XDG config/data/state/cache dirs, verified with `opencode debug paths`); docs.x.ai/build/settings
+# + github.com/xai-org/grok-build user guide (GROK_HOME, auth.json, XAI_API_KEY, GROK_AUTH_*,
+# GROK_DISABLE_AUTOUPDATER; verified with grok 1.0.70: a fresh GROK_HOME is signed out).
 TOOLS = {
     "codex": {
         "title": "OpenAI Codex CLI", "binary": "codex", "packages": ("@openai/codex",),
@@ -76,6 +78,18 @@ TOOLS = {
                      "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY",
                      "GOOGLE_GENERATIVE_AI_API_KEY", "OPENROUTER_API_KEY", "GROQ_API_KEY",
                      "XAI_API_KEY", "MISTRAL_API_KEY", "DEEPSEEK_API_KEY"),
+    },
+    "grok": {
+        "title": "xAI Grok Build CLI", "binary": "grok",
+        # The official installer keeps the binary inside the grok home; `brew install grok` is an
+        # unrelated regex tool, so the installer location wins over PATH lookup.
+        "candidates": ("~/.grok/bin/grok",),
+        "packages": ("/.grok/downloads/grok-", "/.grok/bin/grok"),
+        "register": True,
+        "auth_env": ("XAI_API_KEY", "GROK_AUTH_PROVIDER_COMMAND", "GROK_AUTH_PROVIDER_LABEL",
+                     "GROK_AUTH_TOKEN_TTL", "GROK_AUTH_EARLY_INVALIDATION_SECS",
+                     "GROK_OIDC_ISSUER", "GROK_OIDC_CLIENT_ID", "GROK_DEPLOYMENT_KEY",
+                     "GROK_XAI_API_BASE_URL"),
     },
 }
 
@@ -106,6 +120,15 @@ TOOL_MIGRATION = {
         "credentials": ("data/opencode/auth.json", "data/opencode/mcp-auth.json"),
         "history": ("data", "state"),
         "ephemeral": ("data/opencode/log",),
+    },
+    "grok": {
+        "credentials": ("auth.json", "agent_id", "trusted_folders.toml", "hooks-paths"),
+        "history": ("sessions", "memory", "memory-v2", "memtrace", "active_sessions.json"),
+        # Installation payload, caches and generated files; the binary is never copied.
+        "ephemeral": ("logs", "crash", "bin", "downloads", "bundled", "bundles", "vendor", "docs",
+                      "completions", "marketplace-cache", "models_cache.json",
+                      "settings_cache.json", "version.json", "tip_cursor.json", "CHANGELOG.json",
+                      "CHANGELOG.md", "README.md", ".metadata_version"),
     },
 }
 TOOL_COMPONENTS = ("settings", "history")
@@ -1418,6 +1441,13 @@ class Manager:
         if tool == "gemini":
             # Gemini CLI creates/uses GEMINI_CLI_HOME/.gemini.
             return {"GEMINI_CLI_HOME": str(root)}
+        if tool == "grok":
+            env = {"GROK_HOME": str(root)}
+            if root != self.home / ".grok":
+                # Updates belong to the original installation; otherwise each profile would
+                # download its own ~340 MB copy into GROK_HOME/downloads.
+                env["GROK_DISABLE_AUTOUPDATER"] = "1"
+            return env
         if tool == "copilot":
             return {"COPILOT_HOME": str(root),
                     "COPILOT_CACHE_HOME": str(self.tool_cache(tool, name))}
@@ -1471,7 +1501,10 @@ class Manager:
 
     def find_tool_binary(self, tool):
         spec = self.tool_spec(tool)
-        value = self.tool_registry(tool).get("binary") or shutil.which(spec["binary"])
+        candidates = [str(self.home / Path(c).relative_to("~")) for c in spec.get("candidates", ())]
+        value = (self.tool_registry(tool).get("binary") or
+                 next((c for c in candidates if os.access(c, os.X_OK) and Path(c).is_file()), None) or
+                 shutil.which(spec["binary"]))
         if not value:
             fail(f"{spec['title']} not found. Configure: tool-set-binary {tool} /absolute/path")
         p = Path(value).expanduser()
@@ -1607,7 +1640,7 @@ class Manager:
             return any(rel == p or rel.startswith(p + "/") for p in prefixes)
         if under(rules["credentials"]):
             return "credentials"
-        if under(rules["ephemeral"]):
+        if under(rules["ephemeral"]) or rel.endswith(".lock"):
             return "ephemeral"
         if under(rules["history"]) or re.search(r"\.(sqlite3?|db)(-wal|-shm|-journal)?$", rel):
             return "history"

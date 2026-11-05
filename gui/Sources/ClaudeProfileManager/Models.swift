@@ -159,8 +159,12 @@ extension String {
     /// Abbreviate home directory for display.
     var tildePath: String {
         // Match the Python backend, which resolves ~ from $HOME.
-        let home = ProcessInfo.processInfo.environment["HOME"] ?? NSHomeDirectory()
-        return hasPrefix(home + "/") || self == home ? "~" + dropFirst(home.count) : self
+        // $HOME is what the Python backend uses; the account home covers paths outside it.
+        for home in [ProcessInfo.processInfo.environment["HOME"], NSHomeDirectory()].compactMap({ $0 })
+        where hasPrefix(home + "/") || self == home {
+            return "~" + dropFirst(home.count)
+        }
+        return self
     }
 }
 
@@ -214,13 +218,14 @@ struct ToolInfo: Identifiable, Hashable {
     }
 
     /// Fixed sidebar order; also used before the backend answers.
-    static let order = ["codex", "gemini", "copilot", "opencode"]
+    static let order = ["codex", "gemini", "copilot", "opencode", "grok"]
 
     var symbol: String {
         switch id {
         case "codex": return "chevron.left.forwardslash.chevron.right"
         case "gemini": return "sparkles"
         case "copilot": return "airplane"
+        case "grok": return "bolt.horizontal"
         default: return "curlybraces.square"
         }
     }
@@ -234,6 +239,8 @@ struct ToolInfo: Identifiable, Hashable {
             return "GEMINI_CLI_HOME = kořen profilu; Gemini CLI v něm používá složku .gemini (settings.json, historie, .env). Přihlášení Google účtem může Gemini CLI ukládat do systémové klíčenky – oddělení účtů přes OAuth proto není zaručené, API klíče oddělené jsou."
         case "copilot":
             return "COPILOT_HOME nahrazuje celé ~/.copilot (settings, config.json, session-state, MCP, skills). Cache jde přes COPILOT_CACHE_HOME mimo profil. OAuth token je v klíčence (služba copilot-cli) podle účtu; v každém profilu se přihlaste /login vlastním účtem."
+        case "grok":
+            return "GROK_HOME ukazuje do kořene profilu (config.toml, auth.json, sessions, memory, skills, plugins, logy). Přihlášení je v auth.json profilu – nový profil je odhlášený (ověřeno s grok 1.0.70). Mimo původní ~/.grok se nastaví GROK_DISABLE_AUTOUPDATER=1; aktualizujte grok v původní instalaci příkazem grok update."
         default:
             return "XDG_CONFIG_HOME, XDG_DATA_HOME, XDG_STATE_HOME a XDG_CACHE_HOME ukazují do profilu (opencode.json, auth.json, opencode.db, logy). Ověřeno příkazem opencode debug paths. Tyto proměnné zdědí i nástroje, které opencode spustí (git, gh…)."
         }
@@ -244,6 +251,7 @@ struct ToolInfo: Identifiable, Hashable {
         case "codex": return URL(string: "https://developers.openai.com/codex/config-advanced")!
         case "gemini": return URL(string: "https://geminicli.com/docs/cli/enterprise")!
         case "copilot": return URL(string: "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference")!
+        case "grok": return URL(string: "https://docs.x.ai/build/settings/reference")!
         default: return URL(string: "https://opencode.ai/docs/troubleshooting/")!
         }
     }
@@ -253,6 +261,7 @@ struct ToolInfo: Identifiable, Hashable {
         case "codex": return "npm install -g @openai/codex   nebo   brew install --cask codex"
         case "gemini": return "npm install -g @google/gemini-cli   nebo   brew install gemini-cli"
         case "copilot": return "npm install -g @github/copilot   nebo   brew install copilot-cli"
+        case "grok": return "oficiální instalátor z docs.x.ai, nebo brew install --cask grok-build (pozor: brew install grok je jiný nástroj)"
         default: return "brew install opencode   nebo   npm install -g opencode-ai"
         }
     }

@@ -811,6 +811,8 @@ class Tools(Rig):
                 elif tool == "gemini":
                     self.assertEqual(env, {"GEMINI_CLI_HOME": str(root)})
                     self.assertTrue((root / ".gemini").is_dir())
+                elif tool == "grok":
+                    self.assertEqual(env, {"GROK_HOME": str(root), "GROK_DISABLE_AUTOUPDATER": "1"})
                 elif tool == "copilot":
                     self.assertEqual(env["COPILOT_HOME"], str(root))
                     self.assertEqual(env["COPILOT_CACHE_HOME"], str(self.root / "cache/copilot-work"))
@@ -923,7 +925,7 @@ class ToolExec(unittest.TestCase):
                                 "import sys,os,json\n"
                                 "keys=['CODEX_HOME','GEMINI_CLI_HOME','COPILOT_HOME',"
                                 "'COPILOT_CACHE_HOME','XDG_CONFIG_HOME','XDG_DATA_HOME',"
-                                "'XDG_STATE_HOME','XDG_CACHE_HOME','CODEX_API_KEY','GH_TOKEN',"
+                                "'XDG_STATE_HOME','XDG_CACHE_HOME','CODEX_API_KEY','GH_TOKEN','GROK_HOME',"
                                 "'GEMINI_API_KEY','OPENCODE_CONFIG','KEEP']\n"
                                 "print(json.dumps({'args':sys.argv[1:],"
                                 "'env':{k:os.environ.get(k) for k in keys}}))\n"
@@ -948,7 +950,7 @@ class ToolExec(unittest.TestCase):
                     prof = str(root / "tools" / tool / "w")
                     self.assertEqual(e["KEEP"], "kept")
                     expected = {"codex": ("CODEX_HOME", prof), "gemini": ("GEMINI_CLI_HOME", prof),
-                                "copilot": ("COPILOT_HOME", prof),
+                                "copilot": ("COPILOT_HOME", prof), "grok": ("GROK_HOME", prof),
                                 "opencode": ("XDG_DATA_HOME", prof + "/data")}[tool]
                     self.assertEqual(e[expected[0]], expected[1])
                     leaked = {k for k in ("CODEX_API_KEY", "GH_TOKEN", "GEMINI_API_KEY",
@@ -1095,6 +1097,79 @@ class ToolMigration(Rig):
         with self.assertRaises(cm.Error):
             self.m.tool_import(evil, sha)
         self.assertEqual(list((self.root / "tool-backups").iterdir()), [])
+
+
+class Grok(Rig):
+    def setUp(self):
+        super().setUp()
+        self.m.tool_processes = lambda tool: []
+
+    def test_registered_default_home_keeps_autoupdater(self):
+        grok = self.home / ".grok"
+        write(grok / "config.toml", "")
+        self.m.tool_create("grok", "default", grok, existing=True)
+        self.assertEqual(self.m.tool_env("grok", "default"), {"GROK_HOME": str(grok)})
+
+    def test_installer_binary_preferred_over_path_namesake(self):
+        real = self.home / ".grok/bin/grok"
+        write(real, "#!/bin/sh\n")
+        real.chmod(0o700)
+        brew = self.home / "brew/bin/grok"  # unrelated Homebrew regex tool
+        write(brew, "#!/bin/sh\n")
+        brew.chmod(0o700)
+        with mock.patch.dict(os.environ, {"PATH": str(brew.parent)}):
+            self.assertEqual(self.m.find_tool_binary("grok"), real)
+            real.unlink()
+            self.assertEqual(self.m.find_tool_binary("grok"), brew)
+
+    def test_migration_classes(self):
+        c = self.m.tool_classify
+        for rel, kind in (("auth.json", "credentials"), ("agent_id", "credentials"),
+                          ("trusted_folders.toml", "credentials"), ("sessions/x/s.jsonl", "history"),
+                          ("memory-v2/index", "history"), ("worktrees.db", "history"),
+                          ("downloads/grok-1.0.70-macos-aarch64", "ephemeral"), ("bin/grok", "ephemeral"),
+                          ("leader.lock", "ephemeral"), ("auth.json.lock", "ephemeral"),
+                          ("logs/unified.jsonl", "ephemeral"), ("config.toml", "settings"),
+                          ("sandbox.toml", "settings"), ("skills/a/SKILL.md", "settings"),
+                          ("installed-plugins/p/plugin.json", "settings")):
+            with self.subTest(rel=rel):
+                self.assertEqual(c("grok", rel), kind)
+
+    def test_migration_never_copies_binary_or_login(self):
+        self.m.tool_create("grok", "a")
+        self.m.tool_create("grok", "b")
+        a, b = self.m.tool_root("grok", "a"), self.m.tool_root("grok", "b")
+        write(a / "config.toml", "[cli]\n")
+        write(a / "skills/x/SKILL.md", "s")
+        write(a / "auth.json", {"token": "t"})
+        write(a / "downloads/grok-1.0.70-macos-aarch64", "binary")
+        write(a / "sessions/p/s.jsonl", "{}")
+        self.m.tool_migrate("grok", "a", "b", ["settings"], dry_run=False)
+        self.assertTrue((b / "skills/x/SKILL.md").exists())
+        for rel in ("auth.json", "downloads", "sessions"):
+            self.assertFalse((b / rel).exists(), rel)
+
+
+@unittest.skipUnless(os.access(os.path.expanduser("~/.grok/bin/grok"), os.X_OK), "grok not installed")
+class GrokReal(unittest.TestCase):
+    """End-to-end with the real Grok Build CLI: a new profile is signed out and isolated."""
+    def test_profile_isolated_and_signed_out(self):
+        with tempfile.TemporaryDirectory(prefix="cm-grok-") as tmp:
+            root = Path(tmp).resolve() / "install"
+            root.mkdir()
+            script = root / "claude-manager.py"
+            shutil.copy2(SOURCE, script)
+            env = {k: v for k, v in os.environ.items() if k not in cm.TOOLS["grok"]["auth_env"]}
+            env.pop("GROK_HOME", None)
+            for args in (["tool-create", "grok", "w", "--yes"],
+                         ["tool-set-binary", "grok", os.path.expanduser("~/.grok/bin/grok")]):
+                p = subprocess.run([sys.executable, str(script), *args], env=env, text=True,
+                                   capture_output=True)
+                self.assertEqual(p.returncode, 0, p.stderr)
+            p = subprocess.run([sys.executable, str(script), "tool-run", "grok", "w", "models"],
+                               env=env, text=True, capture_output=True, timeout=120, cwd=tmp)
+            self.assertIn("not authenticated", p.stdout + p.stderr)
+            self.assertTrue((root / "tools/grok/w/config.toml").exists())
 
 
 if __name__ == "__main__":

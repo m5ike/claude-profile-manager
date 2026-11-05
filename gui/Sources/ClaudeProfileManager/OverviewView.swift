@@ -5,7 +5,7 @@ struct OverviewView: View {
     @EnvironmentObject var store: Store
 
     var body: some View {
-        Page(title: "Přehled", subtitle: "Oddělené profily Claude Code, Claude Desktop, Codex, Gemini, Copilot a opencode na jednom Macu") {
+        Page(title: "Přehled", subtitle: "Oddělené profily Claude Code, Claude Desktop, Codex, Gemini, Copilot, opencode a Grok na jednom Macu") {
             if store.pendingTransaction || store.pendingUpdate {
                 Card(title: "Vyžaduje pozornost", systemImage: "exclamationmark.triangle.fill") {
                     Text(store.pendingTransaction

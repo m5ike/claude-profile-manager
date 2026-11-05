@@ -233,6 +233,7 @@ struct ToolProfileSheet: View {
         switch tool.id {
         case "codex": return NSHomeDirectory() + "/.codex"
         case "copilot": return NSHomeDirectory() + "/.copilot"
+        case "grok": return NSHomeDirectory() + "/.grok"
         default: return nil
         }
     }
