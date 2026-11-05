@@ -265,7 +265,9 @@ struct ToolBackupInfo: Identifiable, Hashable {
     let profile: String
     let created: Date?
     let entries: Int
+    let root: String
     var id: String { path.path }
+    var isImport: Bool { path.lastPathComponent.hasPrefix("import-") }
 }
 
 enum AppInfo {

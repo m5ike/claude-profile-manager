@@ -964,5 +964,138 @@ class ToolExec(unittest.TestCase):
             self.assertTrue(listing["opencode"]["profiles"]["w"]["launcher"].endswith("opencode-w"))
 
 
+class ToolMigration(Rig):
+    def setUp(self):
+        super().setUp()
+        self.m.tool_processes = lambda tool: []
+
+    def seed_codex(self):
+        self.m.tool_create("codex", "src")
+        self.m.tool_create("codex", "dst")
+        src = self.m.tool_root("codex", "src")
+        write(src / "config.toml", 'model = "gpt"\ncli_auth_credentials_store = "keyring"\n')
+        write(src / "AGENTS.md", "rules")
+        write(src / "skills/a/SKILL.md", "skill")
+        write(src / "auth.json", {"token": "secret"})
+        write(src / "sessions/2026/11/05/rollout-1.jsonl", "{}\n")
+        write(src / "history.jsonl", "{}\n")
+        write(src / "state_5.sqlite", "db")
+        write(src / "log/codex-tui.log", "noise")
+        return src, self.m.tool_root("codex", "dst")
+
+    def test_classification(self):
+        c = self.m.tool_classify
+        self.assertEqual(c("codex", "auth.json"), "credentials")
+        self.assertEqual(c("codex", "sessions/x.jsonl"), "history")
+        self.assertEqual(c("codex", "state_5.sqlite-wal"), "history")
+        self.assertEqual(c("codex", "log/a.log"), "ephemeral")
+        self.assertEqual(c("codex", "skills/a/SKILL.md"), "settings")
+        self.assertEqual(c("gemini", ".gemini/oauth_creds.json"), "credentials")
+        self.assertEqual(c("gemini", ".gemini/settings.json"), "settings")
+        self.assertEqual(c("copilot", "config.json"), "credentials")
+        self.assertEqual(c("copilot", "permissions-config.json"), "credentials")
+        self.assertEqual(c("copilot", "session-state/x"), "history")
+        self.assertEqual(c("opencode", "data/opencode/auth.json"), "credentials")
+        self.assertEqual(c("opencode", "data/opencode/opencode.db"), "history")
+        self.assertEqual(c("opencode", "config/opencode/opencode.json"), "settings")
+
+    def test_dry_run_changes_nothing(self):
+        src, dst = self.seed_codex()
+        before = cm.inventory(dst)
+        r = self.m.tool_migrate("codex", "src", "dst", ["settings"], "replace")
+        self.assertTrue(r["dry_run"])
+        self.assertEqual(cm.inventory(dst), before)
+        self.assertEqual(r["by_class"], {"settings": 3})
+
+    def test_settings_only_without_credentials_or_logs(self):
+        src, dst = self.seed_codex()
+        r = self.m.tool_migrate("codex", "src", "dst", ["settings"], "replace", dry_run=False)
+        self.assertEqual((dst / "AGENTS.md").read_text(), "rules")
+        self.assertTrue((dst / "skills/a/SKILL.md").exists())
+        self.assertFalse((dst / "auth.json").exists())
+        self.assertFalse((dst / "sessions").exists())
+        self.assertFalse((dst / "log").exists())
+        # Target keeps its own file-based login store; source model setting arrives.
+        cfg = (dst / "config.toml").read_text()
+        self.assertIn('cli_auth_credentials_store = "file"', cfg)
+        self.assertNotIn("keyring", cfg)
+        self.assertIn('model = "gpt"', cfg)
+        self.assertTrue(r["kept_target_auth_store"])
+        self.assertEqual(self.m.tool_verify(Path(r["target_backup"]))["profile"], "dst")
+
+    def test_history_and_explicit_credentials(self):
+        src, dst = self.seed_codex()
+        self.m.tool_migrate("codex", "src", "dst", ["history"], "error", credentials=True, dry_run=False)
+        self.assertTrue((dst / "sessions/2026/11/05/rollout-1.jsonl").exists())
+        self.assertTrue((dst / "state_5.sqlite").exists())
+        self.assertTrue((dst / "auth.json").exists())
+        self.assertFalse((dst / "AGENTS.md").exists())
+
+    def test_conflicts(self):
+        src, dst = self.seed_codex()
+        write(dst / "AGENTS.md", "target")
+        with self.assertRaises(cm.Error) as e:
+            self.m.tool_migrate("codex", "src", "dst", ["settings"], "error")
+        self.assertIn("AGENTS.md", str(e.exception))
+        self.m.tool_migrate("codex", "src", "dst", ["settings"], "keep", dry_run=False)
+        self.assertEqual((dst / "AGENTS.md").read_text(), "target")
+        self.m.tool_migrate("codex", "src", "dst", ["settings"], "replace", dry_run=False)
+        self.assertEqual((dst / "AGENTS.md").read_text(), "rules")
+
+    def test_running_tool_and_bad_input_refused(self):
+        self.seed_codex()
+        for args in ((["nope"],), ([],)):
+            with self.assertRaises(cm.Error):
+                self.m.tool_migrate("codex", "src", "dst", *args)
+        with self.assertRaises(cm.Error):
+            self.m.tool_migrate("codex", "src", "src", ["settings"])
+        self.m.tool_processes = lambda tool: [(5, "codex")]
+        with self.assertRaises(cm.Error):
+            self.m.tool_migrate("codex", "src", "dst", ["settings"])
+
+    def test_symlinks_not_followed(self):
+        src, dst = self.seed_codex()
+        outside = self.home / "outside"
+        write(outside / "secret.txt", "x")
+        (src / "linked").symlink_to(outside)
+        self.m.tool_migrate("codex", "src", "dst", ["settings"], "replace", dry_run=False)
+        self.assertTrue((dst / "linked").is_symlink())
+        self.assertFalse((dst / "secret.txt").exists())
+
+    def test_export_import_and_migrate_from_backup(self):
+        src, dst = self.seed_codex()
+        (src / "rel-link").symlink_to("AGENTS.md")
+        (src / "abs-link").symlink_to(src / "AGENTS.md")
+        b = self.m.tool_backup("codex", "src")
+        out = self.home / "export/codex.tar.gz"
+        self.m.tool_export(b, out)
+        sha = (out.parent / "codex.tar.gz.sha256").read_text().split()[0]
+        with self.assertRaises(cm.Error):
+            self.m.tool_import(out, "0" * 64)
+        imported = self.m.tool_import(out, sha)
+        self.assertEqual(imported.parent, self.root / "tool-backups")
+        self.assertEqual(os.readlink(imported / "data/abs-link"), "AGENTS.md")
+        r = self.m.tool_migrate("codex", imported, "dst", ["settings", "history"], "replace",
+                                dry_run=False, from_backup=True)
+        self.assertEqual((dst / "AGENTS.md").read_text(), "rules")
+        self.assertTrue((dst / "sessions/2026/11/05/rollout-1.jsonl").exists())
+        self.assertFalse((dst / "auth.json").exists())
+        self.m.tool_create("gemini", "g")
+        with self.assertRaises(cm.Error):  # backup of another tool
+            self.m.tool_migrate("gemini", imported, "g", ["settings"], from_backup=True)
+
+    def test_import_refuses_foreign_layout(self):
+        evil = self.home / "evil.tar.gz"
+        with tarfile.open(evil, "w:gz") as tar:
+            data = b"x"
+            info = tarfile.TarInfo("cli/settings.json")
+            info.size = 1
+            tar.addfile(info, io.BytesIO(data))
+        sha = hashlib.sha256(evil.read_bytes()).hexdigest()
+        with self.assertRaises(cm.Error):
+            self.m.tool_import(evil, sha)
+        self.assertEqual(list((self.root / "tool-backups").iterdir()), [])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -12,6 +12,9 @@ struct ToolView: View {
     @State private var restoreTarget: ToolBackupInfo?
     @State private var unregisterTarget: ToolProfile?
     @State private var authTarget: ToolProfile?
+    @State private var migration: MigrationRequest?
+    @State private var showImport = false
+    @State private var exportResult: String?
 
     private var backups: [ToolBackupInfo] { store.toolBackups.filter { $0.tool == tool.id } }
 
@@ -25,6 +28,10 @@ struct ToolView: View {
                         Label("Zaregistrovat existující", systemImage: "tray.and.arrow.down")
                     }
                 }
+                Button { migration = MigrationRequest(source: nil) } label: {
+                    Label("Migrace…", systemImage: "arrow.left.arrow.right")
+                }
+                .disabled(tool.profiles.isEmpty)
                 Spacer()
                 Link(destination: tool.docsURL) { Label("Dokumentace výrobce", systemImage: "book") }
             }
@@ -66,7 +73,14 @@ struct ToolView: View {
             }
             ForEach(tool.profiles) { p in profileCard(p) }
 
-            Card(title: "Zálohy", systemImage: "externaldrive.badge.timemachine") {
+            Card(title: "Zálohy a přenos", systemImage: "externaldrive.badge.timemachine") {
+                HStack {
+                    Text("Exportovaný archiv přenesete na jiný Mac, tam ho importujte a použijte „Migrovat…“.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    Button { showImport = true } label: { Label("Importovat archiv…", systemImage: "square.and.arrow.down") }
+                }
+                if let exportResult { ResultView(title: "Export dokončen", text: exportResult) }
                 if backups.isEmpty {
                     Text("Žádné zálohy profilů \(tool.title).").foregroundStyle(.secondary)
                 }
@@ -74,7 +88,7 @@ struct ToolView: View {
                     HStack {
                         Image(systemName: "clock")
                         Text(b.created.map { $0.formatted(date: .abbreviated, time: .standard) } ?? b.path.lastPathComponent)
-                        Text(b.profile).foregroundStyle(.secondary)
+                        Text(b.profile + (b.isImport ? " (import)" : "")).foregroundStyle(.secondary)
                         Spacer()
                         Text("\(b.entries) položek").font(.caption).foregroundStyle(.secondary)
                         Button("Ověřit") {
@@ -82,6 +96,10 @@ struct ToolView: View {
                                                        success: "Záloha je kompletní a neporušená.") }
                         }
                         Button("Obnovit…") { restoreTarget = b }
+                            .disabled(!tool.profiles.contains { $0.name == b.profile && $0.root == b.root })
+                            .help("Přesná obnova jen do původního profilu a cesty; jinak použijte Migrovat…")
+                        Button("Migrovat…") { migration = MigrationRequest(source: b.path.path) }
+                        Button("Export…") { export(b) }
                         Button { store.reveal(b.path.path) } label: { Image(systemName: "folder") }
                     }
                     .controlSize(.small)
@@ -89,11 +107,17 @@ struct ToolView: View {
             }
         }
         .onAppear {
+            if Snapshotter.openToolMigration, tool.profiles.count > 1 {
+                Snapshotter.openToolMigration = false
+                migration = MigrationRequest(source: nil)
+            }
             binary = tool.configuredBinary
             if Snapshotter.directory != nil { binary = binary.tildePath }
         }
         .sheet(isPresented: $showNew) { ToolProfileSheet(tool: tool, register: false) }
         .sheet(isPresented: $showRegister) { ToolProfileSheet(tool: tool, register: true) }
+        .sheet(item: $migration) { ToolMigrationSheet(tool: tool, backupSource: $0.source) }
+        .sheet(isPresented: $showImport) { ToolImportSheet() }
         .confirmationDialog("Obnovit zálohu?", isPresented: Binding(get: { restoreTarget != nil },
                                                                      set: { if !$0 { restoreTarget = nil } }),
                             presenting: restoreTarget) { b in
@@ -134,6 +158,18 @@ struct ToolView: View {
             Text(p.inheritAuthEnv
                  ? "Proměnné \(tool.authEnv.joined(separator: ", ")) se budou opět odstraňovat."
                  : "Klíče a tokeny z vašeho shellu pak mohou přebít účet přihlášený v profilu \(p.name).")
+        }
+    }
+
+    private func export(_ b: ToolBackupInfo) {
+        guard let out = chooseSavePath(defaultName: "\(tool.id)-\(b.profile)-transfer.tar.gz") else { return }
+        Task {
+            if await store.execute(["tool-export", b.path.path, out], label: "Exportuji…",
+                                   success: "Archiv vytvořen.") != nil {
+                let sha = (try? String(contentsOfFile: out + ".sha256", encoding: .utf8))?
+                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                exportResult = out.tildePath + "\n\nSHA-256 (předejte jiným důvěryhodným kanálem):\n" + sha
+            }
         }
     }
 
@@ -253,5 +289,157 @@ struct ToolProfileSheet: View {
             .padding(20)
         }
         .frame(width: 560)
+    }
+}
+
+
+struct MigrationRequest: Identifiable {
+    let id = UUID()
+    let source: String?   // backup path, or nil for a profile source
+}
+
+/// Copy settings/history between profiles of one tool, always via a dry-run first.
+struct ToolMigrationSheet: View {
+    @EnvironmentObject var store: Store
+    @Environment(\.dismiss) private var dismiss
+    let tool: ToolInfo
+    let backupSource: String?
+
+    @State private var source = ""
+    @State private var target = ""
+    @State private var settings = true
+    @State private var history = false
+    @State private var credentials = false
+    @State private var conflict: ConflictPolicy = .error
+    @State private var dryRunOK: [String]?
+    @State private var result: (title: String, text: String, error: Bool)?
+
+    private var args: [String] {
+        var a = backupSource != nil ? ["tool-migrate-backup", backupSource!, target]
+                                    : ["tool-migrate", tool.id, source, target]
+        a += ["--components", [settings ? "settings" : nil, history ? "history" : nil]
+                .compactMap { $0 }.joined(separator: ","), "--conflict", conflict.rawValue]
+        if credentials { a.append("--credentials") }
+        return a
+    }
+    private var valid: Bool {
+        !target.isEmpty && (settings || history) && (backupSource != nil || (!source.isEmpty && source != target))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label("Migrace – \(tool.title)", systemImage: "arrow.left.arrow.right").font(.title2.weight(.semibold))
+            StepsView(current: dryRunOK == args ? 2 : 1)
+            Form {
+                if let b = backupSource {
+                    LabeledContent("Zdroj (záloha)", value: (b as NSString).lastPathComponent)
+                } else {
+                    Picker("Zdrojový profil", selection: $source) {
+                        Text("Vyberte…").tag("")
+                        ForEach(tool.profiles) { Text($0.name).tag($0.name) }
+                    }
+                }
+                Picker("Cílový profil", selection: $target) {
+                    Text("Vyberte…").tag("")
+                    ForEach(tool.profiles) { Text($0.name).tag($0.name) }
+                }
+                Toggle("Nastavení (konfigurace, instrukce, skills, agenti, MCP, rozšíření)", isOn: $settings)
+                Toggle("Historie (sezení, databáze, stav)", isOn: $history)
+                Toggle("Také přihlašovací údaje a uložená oprávnění (--credentials)", isOn: $credentials)
+                if credentials {
+                    Text("Zkopírují se soubory s tokeny/klíči. Klíčenka macOS se nepřenáší. Používejte jen mezi vlastními účty.")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+                Picker("Při konfliktu", selection: $conflict) {
+                    ForEach(ConflictPolicy.allCases) { Text($0.title).tag($0) }
+                }
+            }
+            .formStyle(.grouped)
+            Text("Logy, dočasné soubory a cache se nekopírují nikdy. U Codexu si cíl vždy ponechá vlastní cli_auth_credentials_store.")
+                .font(.caption).foregroundStyle(.secondary)
+            if let result { ResultView(title: result.title, text: result.text, isError: result.error) }
+            HStack {
+                Spacer()
+                Button("Zavřít", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("1. Zkouška nanečisto") { Task { await run(apply: false) } }
+                    .disabled(!valid || store.isBusy)
+                Button("2. Provést migraci") { Task { await run(apply: true) } }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(dryRunOK != args || store.isBusy)
+            }
+        }
+        .padding(22).frame(width: 640)
+        .onAppear {
+            if Snapshotter.directory != nil, backupSource == nil, tool.profiles.count > 1 {
+                source = tool.profiles[0].name; target = tool.profiles[1].name; history = true
+            }
+        }
+    }
+
+    private func run(apply: Bool) async {
+        let a = args
+        if let r = await store.execute(apply ? a + ["--apply", "--yes"] : a,
+                                       label: apply ? "Migruji…" : "Kontroluji…",
+                                       success: apply ? "Migrace dokončena (cíl zazálohován)." : "Zkouška proběhla bez chyb.") {
+            dryRunOK = apply ? nil : a
+            result = (apply ? "Migrace provedena" : "Výsledek zkoušky – nic nebylo změněno", prettyJSON(r.json), false)
+            if apply { await store.refresh() }
+        } else {
+            dryRunOK = nil
+            result = ("Operace odmítnuta", store.log.first?.error ?? "", true)
+        }
+    }
+}
+
+struct ToolImportSheet: View {
+    @EnvironmentObject var store: Store
+    @Environment(\.dismiss) private var dismiss
+    @State private var archive = ""
+    @State private var sha = ""
+    @State private var output: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label("Import zálohy nástroje", systemImage: "square.and.arrow.down").font(.title2.weight(.semibold))
+            Text("Ověří kontrolní součet a bezpečně rozbalí archiv do INSTALL_DIR/tool-backups. Žádný profil se nemění; data pak přenesete tlačítkem Migrovat… u importované zálohy.")
+                .foregroundStyle(.secondary)
+            Form {
+                LabeledContent("Archiv .tar.gz") {
+                    HStack {
+                        TextField("", text: $archive)
+                        Button("Vybrat…") { if let p = choosePath(directories: false) { archive = p } }
+                    }
+                }
+                LabeledContent("Důvěryhodný SHA-256") {
+                    HStack {
+                        TextField("", text: $sha).font(.system(.body, design: .monospaced))
+                        Button("Ze souboru .sha256") {
+                            if let s = try? String(contentsOfFile: archive + ".sha256", encoding: .utf8) {
+                                sha = String(s.prefix(64)).lowercased()
+                            }
+                        }
+                        .disabled(archive.isEmpty)
+                    }
+                }
+            }
+            .formStyle(.grouped)
+            if let output { ResultView(title: "Import dokončen", text: output) }
+            HStack {
+                Spacer()
+                Button(output == nil ? "Zrušit" : "Zavřít", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Importovat") {
+                    Task {
+                        if let r = await store.execute(["tool-import", archive, "--sha256", sha],
+                                                       label: "Ověřuji a rozbaluji…", success: "Archiv importován.") {
+                            output = prettyJSON(r.json)
+                            await store.refresh()
+                        }
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(archive.isEmpty || sha.range(of: "^[0-9a-f]{64}$", options: .regularExpression) == nil || output != nil)
+            }
+        }
+        .padding(22).frame(width: 620)
     }
 }

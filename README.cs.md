@@ -1,6 +1,6 @@
 # Claude Profile Manager pro macOS
 
-Samostatný správce profilů pro Claude Code CLI a Claude Desktop, verze 1.2.0. Přímé spuštění `claude-manager.py` otevře textovou administraci v terminálu; symlinky `claude-NAME` místo menu spustí skutečné Claude CLI s odpovídajícím `CLAUDE_CONFIG_DIR` a všemi původními argumenty.
+Samostatný správce profilů pro Claude Code CLI a Claude Desktop, verze 1.3.0. Přímé spuštění `claude-manager.py` otevře textovou administraci v terminálu; symlinky `claude-NAME` místo menu spustí skutečné Claude CLI s odpovídajícím `CLAUDE_CONFIG_DIR` a všemi původními argumenty.
 
 Balíček nic sám neinstaluje do tvého Macu. Instalace vyžaduje macOS, Python 3.9+ a existující Claude CLI/Claude.app; vlastní správce používá pouze standardní knihovnu Pythonu a pro práci s GUI Git registry také systémový `git`.
 
@@ -37,7 +37,18 @@ Stejným způsobem lze oddělovat profily dalších AI asistentů pro programov�
 codex-pracovni                           # nebo: "$CM" tool-run codex pracovni
 "$CM" tool-backup codex pracovni
 "$CM" tool-list
+
+# Migrace mezi profily stejného nástroje (nejprve zkouška, pak --apply --yes):
+"$CM" tool-migrate codex osobni pracovni --components settings,history
+"$CM" tool-migrate codex osobni pracovni --components settings,history --apply --yes
+
+# Přenos na jiný Mac:
+"$CM" tool-export "$INSTALL_DIR/tool-backups/ZALOHA" "$HOME/codex-transfer.tar.gz"
+"$CM" tool-import "$HOME/codex-transfer.tar.gz" --sha256 "DOPLN_64_ZNAKU_SHA256"
+"$CM" tool-migrate-backup "$INSTALL_DIR/tool-backups/import-XXXX" pracovni --apply --yes
 ```
+
+Migrace kopíruje nastavení a volitelně historii; přihlašovací soubory a uložená oprávnění jen s `--credentials`, logy a cache nikdy.
 
 Zálohy těchto profilů se ukládají do `INSTALL_DIR/tool-backups`, cache do `INSTALL_DIR/cache`. Podrobnosti a zdroje jsou v kapitole 5 příručky [docs/Napoveda.pdf](docs/Napoveda.pdf) a v [CHANGELOG.md](CHANGELOG.md).
 

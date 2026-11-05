@@ -148,7 +148,8 @@ struct ManagerClient {
             return ToolBackupInfo(path: url, tool: raw["tool"] as? String ?? "?",
                                   profile: raw["profile"] as? String ?? "?",
                                   created: (raw["created"] as? Double).map { Date(timeIntervalSince1970: $0) },
-                                  entries: (raw["files"] as? [String: Any])?.count ?? 0)
+                                  entries: (raw["files"] as? [String: Any])?.count ?? 0,
+                                  root: raw["root"] as? String ?? "")
         }.sorted { ($0.created ?? .distantPast) > ($1.created ?? .distantPast) }
     }
 
