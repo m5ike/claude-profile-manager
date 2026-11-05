@@ -1,6 +1,6 @@
 # Claude Profile Manager pro macOS
 
-Samostatný správce profilů pro Claude Code CLI a Claude Desktop, verze 1.1.0. Přímé spuštění `claude-manager.py` otevře textovou administraci v terminálu; symlinky `claude-NAME` místo menu spustí skutečné Claude CLI s odpovídajícím `CLAUDE_CONFIG_DIR` a všemi původními argumenty.
+Samostatný správce profilů pro Claude Code CLI a Claude Desktop, verze 1.2.0. Přímé spuštění `claude-manager.py` otevře textovou administraci v terminálu; symlinky `claude-NAME` místo menu spustí skutečné Claude CLI s odpovídajícím `CLAUDE_CONFIG_DIR` a všemi původními argumenty.
 
 Balíček nic sám neinstaluje do tvého Macu. Instalace vyžaduje macOS, Python 3.9+ a existující Claude CLI/Claude.app; vlastní správce používá pouze standardní knihovnu Pythonu a pro práci s GUI Git registry také systémový `git`.
 
@@ -14,6 +14,32 @@ Balíček nic sám neinstaluje do tvého Macu. Instalace vyžaduje macOS, Python
 - **Souborová, ne systémová záloha:** kontrolují se datové soubory a symlinky. Keychain, macOS resource forks, ACL a veškerá rozšířená metadata nejsou garantovaně přenesená; nenahrazuje to Time Machine ani systémový snapshot.
 - **Důvěra:** skills, pluginy, hooks a MCP mohou při pozdějším použití spouštět kód. Správce je sám nespouští, ale kopíruj je pouze z důvěryhodného zdroje a při přesunu mezi osobním a pracovním účtem respektuj oprávnění k datům.
 - **Prostor na disku:** staging, automatické zálohy a staré transakční adresáře mohou vyžadovat několik násobků velikosti dat. Staré `.cm-old-*` se automaticky nemažou.
+
+## Grafická aplikace pro macOS
+
+Kromě textové administrace je k dispozici nativní okenní aplikace **Claude Profile Manager.app** (SwiftUI, macOS 13+), která nabízí všechny funkce správce – profily, spouštění, zálohy, migrace, projekty a diagnostiku – se stejnými pojistkami jako příkazová řádka. Sestavíš ji příkazem `gui/build-app.sh`; podrobnosti jsou v [gui/README.md](gui/README.md) a v uživatelské příručce [docs/Napoveda.pdf](docs/Napoveda.pdf).
+
+## Další AI nástroje (od verze 1.2.0)
+
+Stejným způsobem lze oddělovat profily dalších AI asistentů pro programování. Správce nastaví pro spuštěný proces zdokumentovanou proměnnou daného nástroje a ve výchozím stavu odstraní proměnné s klíči a tokeny, které by přebily účet přihlášený v profilu.
+
+| Nástroj | Proměnné | Poznámka |
+| --- | --- | --- |
+| OpenAI Codex CLI | `CODEX_HOME` | Nový profil dostane `cli_auth_credentials_store = "file"`, přihlášení zůstává v `auth.json` profilu. |
+| Google Gemini CLI | `GEMINI_CLI_HOME` (uvnitř `.gemini`) | Přihlášení Google účtem může být ve sdílené klíčence; API klíče jsou oddělené. |
+| GitHub Copilot CLI | `COPILOT_HOME`, `COPILOT_CACHE_HOME` | Token je v klíčence podle účtu; v každém profilu použij `/login`. `GH_TOKEN` apod. se odstraňují. |
+| opencode | `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_STATE_HOME`, `XDG_CACHE_HOME` | Ověřeno `opencode debug paths`; XDG zdědí i podprocesy. |
+
+```bash
+"$CM" tool-create codex pracovni --yes
+"$CM" tool-register copilot vychozi --dir "$HOME/.copilot" --yes
+"$CM" tool-launchers codex pracovni      # vytvoří příkaz codex-pracovni
+codex-pracovni                           # nebo: "$CM" tool-run codex pracovni
+"$CM" tool-backup codex pracovni
+"$CM" tool-list
+```
+
+Zálohy těchto profilů se ukládají do `INSTALL_DIR/tool-backups`, cache do `INSTALL_DIR/cache`. Podrobnosti a zdroje jsou v kapitole 5 příručky [docs/Napoveda.pdf](docs/Napoveda.pdf) a v [CHANGELOG.md](CHANGELOG.md).
 
 ## Instalace
 

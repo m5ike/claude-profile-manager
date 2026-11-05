@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Claude Profile Manager – Nápověda</title>
+<style>
+  @page { size: A4; margin: 18mm 17mm 20mm 17mm; }
+  :root { --accent: #b9573a; --ink: #1d1d1f; --muted: #6e6e73; --line: #e3e3e6; --soft: #f6f4f1; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; color: var(--ink);
+         font-size: 10.4pt; line-height: 1.5; margin: 0; }
+  h1, h2, h3 { font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif; line-height: 1.2; }
+  h1.cont { page-break-before: avoid; margin-top: 28pt; }
+  h1 { font-size: 22pt; margin: 0 0 6pt; color: var(--ink); page-break-before: always; padding-top: 2pt; }
+  h1 .num { color: var(--accent); margin-right: 8pt; }
+  h2 { font-size: 13.5pt; margin: 18pt 0 6pt; color: var(--ink); page-break-after: avoid; }
+  h3 { font-size: 11pt; margin: 12pt 0 4pt; page-break-after: avoid; }
+  p { margin: 0 0 7pt; }
+  .lead { font-size: 11.5pt; color: var(--muted); margin-bottom: 14pt; }
+  code, kbd, .mono { font-family: "SF Mono", Menlo, monospace; font-size: 8.8pt; }
+  code { background: var(--soft); padding: 0.5pt 3pt; border-radius: 3pt; }
+  pre { background: #1f1f22; color: #f2f2f2; padding: 9pt 11pt; border-radius: 6pt; font-size: 8.6pt;
+        white-space: pre-wrap; word-break: break-all; page-break-inside: avoid; }
+  pre code { background: none; padding: 0; color: inherit; }
+  kbd { border: 1px solid #c7c7cc; border-bottom-width: 2px; border-radius: 4px; padding: 0 4pt; background: #fff; }
+  ul, ol { margin: 0 0 8pt; padding-left: 16pt; }
+  li { margin-bottom: 3pt; }
+  table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 9.4pt; page-break-inside: avoid; }
+  th { text-align: left; background: var(--soft); font-weight: 600; }
+  th, td { border-bottom: 1px solid var(--line); padding: 5pt 7pt; vertical-align: top; }
+  figure { margin: 10pt 0 14pt; page-break-inside: avoid; }
+  figure img { width: 92%; display: block; margin: 0 auto; border-radius: 8pt; border: 1px solid var(--line); box-shadow: 0 2pt 10pt rgba(0,0,0,.08); }
+  figure.medium img { width: 68%; }
+  figure.small img { width: 70%; display: block; margin: 0 auto; }
+  figcaption { font-size: 8.8pt; color: var(--muted); margin-top: 5pt; text-align: center; }
+  .note, .warn, .tip { border-radius: 6pt; padding: 8pt 11pt; margin: 8pt 0 10pt; page-break-inside: avoid; }
+  .note { background: #eef4fd; border-left: 3.5pt solid #3478f6; }
+  .warn { background: #fdf1ec; border-left: 3.5pt solid var(--accent); }
+  .tip  { background: #eef8ef; border-left: 3.5pt solid #34a853; }
+  .note b:first-child, .warn b:first-child, .tip b:first-child { display: block; margin-bottom: 2pt; }
+  .steps { counter-reset: s; list-style: none; padding-left: 0; }
+  .steps > li { counter-increment: s; position: relative; padding-left: 24pt; margin-bottom: 6pt; }
+  .steps > li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 16pt; height: 16pt;
+        border-radius: 50%; background: var(--accent); color: #fff; font-size: 8.5pt; font-weight: 700;
+        text-align: center; line-height: 16pt; }
+  .ui { font-weight: 600; }
+
+  /* Cover */
+  .cover { height: 255mm; display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+           padding: 0 6mm; page-break-after: always; }
+  .cover img { width: 110pt; margin-bottom: 22pt; }
+  .cover .title { font-size: 34pt; font-weight: 700; letter-spacing: -0.5pt; margin: 0; }
+  .cover .sub { font-size: 15pt; color: var(--muted); margin: 6pt 0 26pt; }
+  .cover .bar { width: 60pt; height: 4pt; background: var(--accent); border-radius: 2pt; margin-bottom: 20pt; }
+  .cover .meta { font-size: 10pt; color: var(--muted); line-height: 1.7; }
+
+  /* TOC */
+  .toc { page-break-after: always; }
+  .toc h1 { page-break-before: avoid; }
+  .toc ol { list-style: none; padding: 0; columns: 1; }
+  .toc > ol > li { font-weight: 600; margin: 7pt 0 2pt; font-size: 11pt; }
+  .toc ol ol { font-weight: 400; font-size: 9.8pt; padding-left: 20pt; margin: 2pt 0 4pt; }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc .n { color: var(--accent); display: inline-block; width: 20pt; }
+  a { color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
+  .card { border: 1px solid var(--line); border-radius: 7pt; padding: 9pt 11pt; page-break-inside: avoid; }
+  .card h3 { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <img src="img/icon.png" alt="">
+  <div class="bar"></div>
+  <p class="title">Claude Profile Manager</p>
+  <p class="sub">Uživatelská příručka grafické aplikace pro macOS</p>
+  <div class="meta">
+    Verze 1.2.0 · listopad 2026 · macOS 13 Ventura a novější<br>
+    Oddělené profily Claude Code, Claude Desktop, OpenAI Codex CLI,<br>Google Gemini CLI, GitHub Copilot CLI a opencode na jednom Macu:<br>
+    vytváření, spouštění, zálohy, migrace a diagnostika.
+  </div>
+</section>
+
+<section class="toc">
+  <h1>Obsah</h1>
+  <ol>
+    <li><a href="#uvod"><span class="n">1</span>Úvod a principy</a></li>
+    <li><a href="#instalace"><span class="n">2</span>Instalace a první spuštění</a>
+      <ol><li><a href="#pozadavky">Požadavky</a></li><li><a href="#sestaveni">Sestavení aplikace</a></li><li><a href="#prvni">První spuštění a nastavení</a></li></ol></li>
+    <li><a href="#okno"><span class="n">3</span>Hlavní okno</a>
+      <ol><li><a href="#prehled">Obrazovka Přehled</a></li></ol></li>
+    <li><a href="#profily"><span class="n">4</span>Profily</a>
+      <ol><li><a href="#typy">Typy profilů</a></li><li><a href="#novy">Nový profil</a></li><li><a href="#registrace">Registrace existujících dat</a></li><li><a href="#detail">Detail profilu</a></li><li><a href="#spousteni">Spouštění CLI a Desktopu</a></li><li><a href="#nastaveni">Úprava nastavení</a></li><li><a href="#zmena-typu">Změna typu profilu</a></li></ol></li>
+    <li><a href="#dalsi"><span class="n">5</span>Další AI nástroje (Codex, Gemini, Copilot, opencode)</a>
+      <ol><li><a href="#dalsi-princip">Princip oddělení</a></li><li><a href="#dalsi-prace">Práce s profily</a></li><li><a href="#dalsi-omezeni">Omezení a ověření</a></li></ol></li>
+    <li><a href="#zalohy"><span class="n">6</span>Zálohy a přenos na jiný Mac</a></li>
+    <li><a href="#migrace"><span class="n">7</span>Migrace mezi profily</a></li>
+    <li><a href="#projekty"><span class="n">8</span>Projekty</a></li>
+    <li><a href="#prostredi"><span class="n">9</span>Prostředí a diagnostika</a></li>
+    <li><a href="#protokol"><span class="n">10</span>Protokol činností</a></li>
+    <li><a href="#bezpecnost"><span class="n">11</span>Bezpečnostní model a omezení</a></li>
+    <li><a href="#problemy"><span class="n">12</span>Řešení problémů</a></li>
+    <li><a href="#zkratky"><span class="n">13</span>Klávesové zkratky a příkazy</a></li>
+    <li><a href="#glosar"><span class="n">14</span>Slovníček pojmů</a></li>
+    <li><a href="#verze"><span class="n">15</span>Historie verzí</a></li>
+  </ol>
+</section>
+
+<!-- 1 -->
+<h1 id="uvod"><span class="num">1</span>Úvod a principy</h1>
+<p class="lead">Claude Profile Manager umožňuje na jednom uživatelském účtu macOS provozovat několik zcela oddělených prostředí Claude – například osobní a pracovní účet – s vlastní konfigurací, historií, pluginy a přihlášením.</p>
+
+<p>Grafická aplikace <span class="ui">Claude Profile Manager.app</span> je nativní okenní rozhraní (SwiftUI) nad osvědčeným nástrojem příkazové řádky <code>claude-manager.py</code>. Veškerou práci s daty – zámky, kontrolu běžících procesů, zálohy, staging a transakční journal – provádí vždy tento skript. Aplikace mu pouze předává přesně stanovené příkazy a jejich výsledky přehledně zobrazuje.</p>
+
+<div class="grid2">
+  <div class="card"><h3>Co aplikace umí</h3>
+    <ul>
+      <li>vytvářet a registrovat profily typu CLI, Desktop nebo obojí,</li>
+      <li>spouštět Claude CLI v Terminálu a Claude Desktop pro zvolený profil,</li>
+      <li>generovat spouštěče (<code>claude-NAZEV</code>, <code>Claude NAZEV.app</code>),</li>
+      <li>zálohovat, ověřovat, obnovovat, exportovat a importovat,</li>
+      <li>migrovat nastavení, skills, pluginy a historii se zkouškou nanečisto,</li>
+      <li>bezpečně kopírovat projekty, upravovat nastavení a diagnostikovat instalaci.</li>
+      <li>spravovat oddělené profily OpenAI Codex CLI, Google Gemini CLI, GitHub Copilot CLI a opencode.</li>
+    </ul></div>
+  <div class="card"><h3>Co aplikace záměrně nedělá</h3>
+    <ul>
+      <li>sama nic neinstaluje do systému ani do <code>/Applications</code>,</li>
+      <li>nekopíruje přihlášení z Keychainu ani cookies Desktopu,</li>
+      <li>nemaže staré zálohy ani dočasné adresáře <code>.cm-*</code>,</li>
+      <li>neobchází pojistky skriptu – co odmítne skript, odmítne i aplikace,</li>
+      <li>nespouští skills, pluginy, hooks ani MCP servery.</li>
+    </ul></div>
+</div>
+
+<h2>Jak to funguje</h2>
+<p>Každý profil má vlastní datové kořeny. CLI část používá proměnnou <code>CLAUDE_CONFIG_DIR</code>, Desktop část parametr <code>--user-data-dir</code>. Registr všech profilů je uložen v souboru <code>manager.json</code> v instalačním adresáři správce (dále <b>INSTALL_DIR</b>), typicky <code>~/.local/share/claude-profile-manager</code>.</p>
+<pre><code>INSTALL_DIR/
+├── claude-manager.py        řídicí skript (backend aplikace)
+├── manager.json             registr profilů
+├── sbin/claude-osobni       spouštěč CLI (symlink)
+├── data/claude-osobni/      CLI data profilu
+├── Applications/Claude osobni.app   spouštěč Desktopu
+├── backups/                 ověřené zálohy a importy
+└── locks/ receipts/ shell-backups/
+
+~/Library/Application Support/Claude-osobni/   Desktop data profilu</code></pre>
+
+<div class="note"><b>Doporučený postup pro nového uživatele</b>
+1. V části <i>Prostředí a diagnostika</i> nastavte cestu ke skutečnému Claude CLI. 2. Zaregistrujte stávající výchozí data (<code>~/.claude</code> a <code>~/Library/Application Support/Claude</code>) a vytvořte jejich zálohu. 3. Vytvořte nové profily, např. <i>osobni</i> a <i>pracovni</i>, a vygenerujte spouštěče. 4. Přidejte PATH blok do shellu, aby fungovaly příkazy <code>claude-NAZEV</code>.</div>
+
+<!-- 2 -->
+<h1 id="instalace"><span class="num">2</span>Instalace a první spuštění</h1>
+<h2 id="pozadavky">Požadavky</h2>
+<table>
+  <tr><th>Součást</th><th>Požadavek</th></tr>
+  <tr><td>Operační systém</td><td>macOS 13 Ventura nebo novější</td></tr>
+  <tr><td>Python</td><td>3.9+ (Homebrew, python.org nebo systémový <code>/usr/bin/python3</code>)</td></tr>
+  <tr><td>Správce profilů</td><td>nainstalovaný <code>claude-manager.py</code> (viz README, <code>install.sh</code>)</td></tr>
+  <tr><td>Claude</td><td>Claude Code CLI a/nebo <code>Claude.app</code> podle typů profilů</td></tr>
+  <tr><td>Sestavení</td><td>Xcode nebo Command Line Tools (Swift 5.9+), jen pro sestavení aplikace</td></tr>
+</table>
+
+<h2 id="sestaveni">Sestavení aplikace</h2>
+<ol class="steps">
+  <li>Nejprve nainstalujte samotného správce podle README (pokud ještě není):
+    <pre><code>./install.sh "$HOME/.local/share/claude-profile-manager"</code></pre></li>
+  <li>V adresáři balíčku sestavte aplikaci:
+    <pre><code>cd gui
+./build-app.sh</code></pre>
+    Výsledkem je <code>gui/build/Claude Profile Manager.app</code> včetně ikony a této nápovědy.</li>
+  <li>Aplikaci přetáhněte do složky <code>Aplikace</code> nebo <code>~/Applications</code> a případně připněte do Docku.</li>
+  <li>Aplikace je podepsána pouze lokálně (ad-hoc). Pokud ji přenesete na jiný Mac a Gatekeeper ji odmítne, otevřete ji poprvé přes <span class="ui">pravé tlačítko → Otevřít</span>.</li>
+</ol>
+
+<h2 id="prvni">První spuštění a nastavení</h2>
+<p>Při spuštění aplikace automaticky hledá <code>claude-manager.py</code> v obvyklých umístěních (<code>~/.local/share/claude-profile-manager</code>, <code>~/Applications/claude-profile-manager</code> a nadřazené složky aplikace) a Python 3 (Homebrew, <code>/usr/local</code>, python.org, systémový). Pokud správce nenajde, zobrazí uvítací obrazovku s výběrem.</p>
+<ol class="steps">
+  <li>Klikněte na <span class="ui">Vybrat…</span> u pole <i>claude-manager.py</i> a zvolte skript ve vašem INSTALL_DIR. Aplikace ověří, že jde skutečně o správce profilů.</li>
+  <li>Zkontrolujte cestu k Pythonu. Tlačítko <span class="ui">Najít automaticky</span> vyplní obě hodnoty znovu.</li>
+  <li>Potvrďte tlačítkem <span class="ui">Použít</span>. Stejné volby najdete kdykoli v <span class="ui">Claude Profile Manager → Nastavení…</span> (<kbd>⌘</kbd><kbd>,</kbd>).</li>
+</ol>
+
+
+<!-- 3 -->
+<h1 id="okno"><span class="num">3</span>Hlavní okno</h1>
+<p class="lead">Okno je rozděleno na postranní panel s navigací a hlavní oblast s obsahem. Rozložení odpovídá zvyklostem moderních aplikací pro macOS.</p>
+<figure><img src="img/01-prehled.png" alt=""><figcaption>Obrázek 1 – Hlavní okno s přehledem profilů</figcaption></figure>
+<h2 id="prehled">Obrazovka Přehled</h2>
+<p>Přehled je výchozí obrazovka. Horní dlaždice ukazují počet profilů, počet záloh, výsledek diagnostiky a verzi správce. Pokud diagnostika najde problém (chybějící adresář, nenalezený Claude binary, nedokončená transakce…), zobrazí se pod dlaždicemi seznam s odkazem na podrobnosti.</p>
+<p>Každý profil má vlastní kartu s typem, cestami k datům, počtem projektů a záloh. Tlačítka <span class="ui">CLI</span> a <span class="ui">Desktop</span> profil přímo spustí, <span class="ui">Detail</span> (nebo dvojklik na kartu) otevře jeho nastavení a nabídka <span class="ui">⋯</span> nabízí rychlé akce.</p>
+<p>Pokud zatím nemáte žádný profil, přehled zobrazí průvodce prvními kroky.</p>
+<h2>Části okna</h2>
+<table>
+  <tr><th style="width:30%">Oblast</th><th>Popis</th></tr>
+  <tr><td><b>Správce → Přehled</b></td><td>Souhrn stavu, problémy z diagnostiky a karty všech profilů.</td></tr>
+  <tr><td><b>Profily</b></td><td>Seznam profilů s ikonou a typem (CLI / GUI / BOTH). Pravé tlačítko otevře rychlé akce: spuštění, záloha, spouštěče, zobrazení ve Finderu.</td></tr>
+  <tr><td><b>Nástroje</b></td><td>Zálohy a přenos, Migrace, Projekty, Prostředí a diagnostika, Protokol činností. Oranžová ikona u protokolu značí neúspěšnou operaci.</td></tr>
+  <tr><td><b>Panel nástrojů</b></td><td>Průběh aktuální operace, <span class="ui">Obnovit</span> (<kbd>⌘</kbd><kbd>R</kbd>), <span class="ui">+</span> nový profil (s nabídkou registrace) a <span class="ui">?</span> nápověda.</td></tr>
+  <tr><td><b>Oznámení</b></td><td>Úspěšné operace se krátce zobrazí v dolní části okna. Chyby se zobrazí v dialogu s možností přejít do protokolu.</td></tr>
+</table>
+<div class="tip"><b>Upozornění na přerušenou transakci</b>Pokud správce najde nedokončenou transakci (<code>transaction.json</code>) nebo aktualizaci, zobrazí se v dolní části postranního panelu oranžové upozornění. Kliknutím přejdete přímo k obnově.</div>
+
+<!-- 5 -->
+<h1 id="profily"><span class="num">4</span>Profily</h1>
+<h2 id="typy">Typy profilů</h2>
+<table>
+  <tr><th style="width:24%">Typ</th><th>Co vznikne</th><th style="width:32%">Poznámka</th></tr>
+  <tr><td><b>Pouze CLI</b> (<code>cli</code>)</td><td>CLI datový adresář a příkaz <code>claude-NAZEV</code>.</td><td>Může běžet současně s jinými CLI i s Desktopem.</td></tr>
+  <tr><td><b>Pouze Desktop</b> (<code>gui</code>)</td><td>Desktop datový adresář a aplikace <code>Claude NAZEV.app</code>.</td><td>Nevyžaduje instalaci CLI.</td></tr>
+  <tr><td><b>CLI + Desktop</b> (<code>both</code>)</td><td>Oba datové kořeny a oba spouštěče.</td><td>Výchozí volba, kompatibilní s verzí 1.0.</td></tr>
+</table>
+<p>Název profilu musí mít 1–32 znaků, začínat malým písmenem a obsahovat jen malá písmena ASCII, číslice, <code>_</code> a <code>-</code>. Předpona <code>gui-</code> je rezervovaná. Formulář chybný název okamžitě označí.</p>
+
+<h2 id="novy">Nový profil</h2>
+<figure class="small"><img src="img/03-novy-profil.png" alt=""><figcaption>Obrázek 2 – Dialog nového profilu</figcaption></figure>
+<ol class="steps">
+  <li>Zvolte <span class="ui">Soubor → Nový profil…</span> (<kbd>⌘</kbd><kbd>N</kbd>) nebo tlačítko <span class="ui">+</span>.</li>
+  <li>Zadejte název a zvolte typ profilu.</li>
+  <li>Adresáře můžete ponechat prázdné – použijí se výchozí cesty <code>INSTALL_DIR/data/claude-NAZEV</code> a <code>~/Library/Application Support/Claude-NAZEV</code>. Zadaný adresář nesmí existovat.</li>
+  <li>Ponechte zapnuté <span class="ui">Po vytvoření vygenerovat spouštěče</span> a potvrďte <span class="ui">Vytvořit profil</span>.</li>
+</ol>
+<p>Nový profil je prázdný. Při prvním spuštění CLI nebo Desktopu se v něm přihlásíte požadovaným účtem.</p>
+
+<h2 id="registrace">Registrace existujících dat</h2>
+<p>Volba <span class="ui">Zaregistrovat existující data…</span> (<kbd>⇧</kbd><kbd>⌘</kbd><kbd>N</kbd>) převezme už existující adresáře <b>bez kopírování a beze změny obsahu</b>. Typicky tak zaregistrujete výchozí instalaci Claude, abyste ji mohli zálohovat a migrovat. Tlačítko <span class="ui">Výchozí</span> vyplní standardní cesty <code>~/.claude</code> a <code>~/Library/Application Support/Claude</code>.</p>
+<div class="warn"><b>Jedna registrace pro jednu cestu</b>Správce odmítne překrývající se kořeny, symlinky v cestě i systémové nebo nadřazené adresáře (např. samotný domovský adresář). Registrace vyžaduje ukončené procesy Claude.</div>
+
+<h2 id="detail">Detail profilu</h2>
+<figure><img src="img/02-profil.png" alt=""><figcaption>Obrázek 3 – Detail profilu typu CLI + Desktop</figcaption></figure>
+<table>
+  <tr><th style="width:28%">Sekce</th><th>Obsah</th></tr>
+  <tr><td><b>Umístění dat</b></td><td>Cesty CLI (<code>CLAUDE_CONFIG_DIR</code>) a Desktop (<code>--user-data-dir</code>), případně cesty vypnutých částí. Šipka otevře umístění ve Finderu.</td></tr>
+  <tr><td><b>Spouštěče</b></td><td>Cesta k příkazu <code>claude-NAZEV</code> a k aplikaci pro Dock. Tlačítko je vygeneruje nebo aktualizuje; přepisuje jen spouštěče vytvořené tímto správcem.</td></tr>
+  <tr><td><b>Přihlášení a prostředí CLI</b></td><td>Přepínač dědění autentizačních proměnných (viz níže).</td></tr>
+  <tr><td><b>Nastavení</b></td><td>Bezpečná úprava <code>settings.json</code> (CLI) a <code>claude_desktop_config.json</code> (Desktop).</td></tr>
+  <tr><td><b>Zálohy profilu</b></td><td>Výběr rozsahu, tlačítko <span class="ui">Zálohovat nyní</span> a posledních pět záloh.</td></tr>
+  <tr><td><b>Projekty</b></td><td>Evidované projektové adresáře, přidání a kopírování projektu.</td></tr>
+  <tr><td><b>Typ profilu</b></td><td>Změna typu se zachováním dat vypnuté části.</td></tr>
+</table>
+
+<h3>Dědění autentizačních proměnných</h3>
+<p>Ve výchozím stavu (vypnuto, doporučeno) správce před spuštěním CLI odstraní z prostředí proměnné <code>ANTHROPIC_API_KEY</code>, <code>ANTHROPIC_AUTH_TOKEN</code>, <code>CLAUDE_CODE_OAUTH_TOKEN</code>, <code>ANTHROPIC_BASE_URL</code> a přepínače Bedrock, Vertex a Foundry. Klíč z vašeho shellu tak nepřebije účet přihlášený v profilu. Zapnutí (režim <i>inherit</i>) má smysl jen tehdy, pokud profil záměrně používá API klíč nebo cloudového providera. Klíč se nikdy neukládá do <code>manager.json</code>.</p>
+
+<h2 id="spousteni">Spouštění CLI a Desktopu</h2>
+<p><span class="ui">Spustit CLI v Terminálu</span> otevře nové okno aplikace Terminál, ve kterém poběží Claude CLI se zvoleným profilem. CLI potřebuje skutečný terminál (TTY), proto neběží uvnitř okna správce. Stejného výsledku dosáhnete příkazem <code>claude-NAZEV</code> v libovolném terminálu (po nastavení PATH).</p>
+<p><span class="ui">Spustit Claude Desktop</span> otevře Claude.app s datovým adresářem profilu. Pokud tentýž profil už běží, aplikace jen ohlásí úspěch. Pokud běží <b>jiná</b> instance Claude Desktop, spuštění se odmítne – zabrání se tak smíchání přihlašovacích callbacků mezi účty. Nejprve ukončete běžící Claude Desktop.</p>
+<div class="tip"><b>Spouštěče pro Dock</b>Aplikace <code>INSTALL_DIR/Applications/Claude NAZEV.app</code> lze připnout do Docku a spouštět dvojklikem i bez otevírání správce. Po přesunutí INSTALL_DIR je nutné spouštěče vygenerovat znovu.</div>
+
+<h2 id="nastaveni">Úprava nastavení</h2>
+<p>Tlačítko <span class="ui">Upravit settings.json</span> otevře vestavěný editor JSON. Editor průběžně kontroluje platnost, tlačítkem <span class="ui">Formátovat</span> obsah uspořádá. Po stisku <span class="ui">Zazálohovat a uložit</span> (<kbd>⌘</kbd><kbd>S</kbd>) proběhne stejný bezpečný postup jako v příkazové řádce:</p>
+<ol>
+  <li>vytvoří se a ověří záloha dané části profilu,</li>
+  <li>obsah se zapíše do stagingové kopie a znovu se zvaliduje,</li>
+  <li>zkontroluje se, že neběží Claude a že originál nikdo mezitím nezměnil,</li>
+  <li>změna se transakčně přepne do profilu.</li>
+</ol>
+<p>Neplatný JSON nebo JSON, jehož nejvyšší úroveň není objekt, nelze uložit – původní soubor zůstane beze změny.</p>
+
+<h2 id="zmena-typu">Změna typu profilu</h2>
+<p>V sekci <span class="ui">Typ profilu</span> vyberte nový typ a klikněte na <span class="ui">Změnit typ…</span>. Před změnou se zazálohují aktivní kořeny. Data vypnuté části se <b>nemažou</b>, jejich cesty se uloží jako <i>disabled_roots</i> a po opětovném zapnutí se použijí znovu. Aplikace poté automaticky aktualizuje spouštěče. Staré spouštěče vypnuté části zůstanou na disku, ale jejich spuštění bude odmítnuto.</p>
+
+
+<!-- 5 tools -->
+<h1 id="dalsi"><span class="num">5</span>Další AI nástroje</h1>
+<p class="lead">Od verze 1.2.0 spravuje Claude Profile Manager oddělené profily i pro další AI asistenty pro programování v terminálu: OpenAI Codex CLI, Google Gemini CLI, GitHub Copilot CLI a opencode.</p>
+<figure><img src="img/09-codex.png" alt=""><figcaption>Obrázek 4 – Profily OpenAI Codex CLI</figcaption></figure>
+
+<h2 id="dalsi-princip">Princip oddělení</h2>
+<p>Každý nástroj má zdokumentovanou proměnnou prostředí, která přesměruje jeho uživatelská data do jiného adresáře. Správce ji nastaví jen pro spuštěný proces, takže výchozí instalace nástroje zůstává nedotčená. Profily dalších nástrojů mají vlastní registr; jméno <i>pracovni</i> tak může existovat současně u Claude, Codexu i opencode.</p>
+<table>
+  <tr><th style="width:17%">Nástroj</th><th style="width:30%">Nastavované proměnné</th><th>Co je v profilu / poznámka k přihlášení</th></tr>
+  <tr><td><b>OpenAI Codex CLI</b></td><td><code>CODEX_HOME</code> = kořen profilu</td><td><code>config.toml</code>, <code>auth.json</code>, historie, sezení a logy. Nový profil dostane <code>cli_auth_credentials_store = "file"</code>, takže přihlášení zůstává v <code>auth.json</code> profilu místo sdílené klíčenky.</td></tr>
+  <tr><td><b>Google Gemini CLI</b></td><td><code>GEMINI_CLI_HOME</code> = kořen profilu</td><td>Gemini CLI v něm používá složku <code>.gemini</code> (settings.json, historie, <code>.env</code>). Přihlášení Google účtem může ukládat do systémové klíčenky – oddělení OAuth účtů proto není zaručené; API klíče oddělené jsou.</td></tr>
+  <tr><td><b>GitHub Copilot CLI</b></td><td><code>COPILOT_HOME</code> = kořen profilu, <code>COPILOT_CACHE_HOME</code> = <code>INSTALL_DIR/cache/copilot-NAZEV</code></td><td>Nahrazuje celé <code>~/.copilot</code> (settings, config.json, session-state, MCP, skills, agents). OAuth token je v klíčence (služba <code>copilot-cli</code>) podle účtu; v každém profilu se přihlaste příkazem <code>/login</code> vlastním účtem.</td></tr>
+  <tr><td><b>opencode</b></td><td><code>XDG_CONFIG_HOME</code>, <code>XDG_DATA_HOME</code>, <code>XDG_STATE_HOME</code> do profilu, <code>XDG_CACHE_HOME</code> do <code>INSTALL_DIR/cache</code></td><td><code>opencode.json</code>, <code>auth.json</code>, <code>opencode.db</code>, logy a snapshoty. Ověřeno příkazem <code>opencode debug paths</code> (opencode 2.2.5). Proměnné XDG zdědí i programy, které opencode spustí (git, gh…).</td></tr>
+</table>
+<h3>Odstraňované autentizační proměnné</h3>
+<p>Stejně jako u Claude se před spuštěním ve výchozím stavu odstraní proměnné, které by přebily účet přihlášený v profilu. Dědění lze pro konkrétní profil zapnout přepínačem nebo příkazem <code>tool-auth-env NASTROJ NAZEV inherit</code>.</p>
+<table>
+  <tr><th style="width:17%">Nástroj</th><th>Proměnné</th></tr>
+  <tr><td>Codex</td><td><code>CODEX_API_KEY</code>, <code>OPENAI_API_KEY</code>, <code>OPENAI_BASE_URL</code></td></tr>
+  <tr><td>Gemini</td><td><code>GEMINI_API_KEY</code>, <code>GOOGLE_API_KEY</code>, <code>GOOGLE_APPLICATION_CREDENTIALS</code>, <code>GOOGLE_CLOUD_PROJECT</code>, <code>GOOGLE_CLOUD_PROJECT_ID</code>, <code>GOOGLE_CLOUD_LOCATION</code>, <code>GOOGLE_GENAI_USE_VERTEXAI</code></td></tr>
+  <tr><td>Copilot</td><td><code>COPILOT_GITHUB_TOKEN</code>, <code>GH_TOKEN</code>, <code>GITHUB_TOKEN</code> (podle dokumentace mají přednost před účtem z <code>/login</code>)</td></tr>
+  <tr><td>opencode</td><td><code>OPENCODE_CONFIG</code>, <code>OPENCODE_CONFIG_DIR</code>, <code>OPENCODE_CONFIG_CONTENT</code> a klíče poskytovatelů (<code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code>, <code>GEMINI_API_KEY</code>, <code>GOOGLE_GENERATIVE_AI_API_KEY</code>, <code>OPENROUTER_API_KEY</code>, <code>GROQ_API_KEY</code>, <code>XAI_API_KEY</code>, <code>MISTRAL_API_KEY</code>, <code>DEEPSEEK_API_KEY</code>)</td></tr>
+</table>
+
+<h2 id="dalsi-prace">Práce s profily</h2>
+<figure class="medium"><img src="img/10-opencode.png" alt=""><figcaption>Obrázek 5 – Profily opencode</figcaption></figure>
+<ol class="steps">
+  <li>V postranním panelu otevřete sekci <span class="ui">Další AI nástroje</span> a vyberte nástroj. Pokud nebyl nalezen spustitelný soubor, obrazovka ukáže doporučený způsob instalace; cestu můžete nastavit i ručně.</li>
+  <li><span class="ui">Nový profil</span> vytvoří prázdný kořen v <code>INSTALL_DIR/tools/NASTROJ/NAZEV</code> (lze zvolit jiný adresář). <span class="ui">Zaregistrovat existující</span> převezme stávající data bez kopírování – např. <code>~/.codex</code> nebo <code>~/.copilot</code>. U Gemini registrujte adresář obsahující <code>.gemini</code>; samotný domovský adresář registrovat nelze. opencode podporuje jen spravované profily, protože výchozí data leží ve čtyřech různých adresářích.</li>
+  <li><span class="ui">Spustit v Terminálu</span> otevře nástroj s profilem. Spouštěč <code>NASTROJ-NAZEV</code> (např. <code>codex-pracovni</code>) v <code>INSTALL_DIR/sbin</code> umožňuje totéž z libovolného terminálu; argumenty, vstup, výstup i návratový kód se předávají beze změny.</li>
+  <li>Při prvním spuštění se v profilu přihlaste požadovaným účtem (<code>codex login</code>, výběr účtu v Gemini CLI, <code>/login</code> v Copilot CLI, <code>/connect</code> v opencode).</li>
+  <li><span class="ui">Zálohovat</span> vytvoří ověřenou kopii kořene profilu v <code>INSTALL_DIR/tool-backups</code>. <span class="ui">Obnovit…</span> vrátí profil do stavu zálohy; předtím zazálohuje aktuální stav a vyžaduje, aby nástroj neběžel.</li>
+  <li><span class="ui">Odebrat z registru</span> profil pouze vyřadí ze správce – adresář s daty zůstává.</li>
+</ol>
+<div class="note"><b>Příkazová řádka</b><code>tool-list</code>, <code>tool-create</code>, <code>tool-register</code>, <code>tool-unregister</code>, <code>tool-set-binary</code>, <code>tool-auth-env</code>, <code>tool-launchers</code>, <code>tool-run</code>, <code>tool-backup</code>, <code>tool-verify</code>, <code>tool-restore</code>. Příklad: <code>claude-manager.py tool-create codex pracovni --yes</code>.</div>
+
+<h2 id="dalsi-omezeni">Omezení a ověření</h2>
+<ul>
+  <li>Chování bylo ověřeno proti aktuální dokumentaci výrobců (listopad 2026): developers.openai.com/codex (CODEX_HOME, cli_auth_credentials_store, CODEX_API_KEY), geminicli.com (GEMINI_CLI_HOME, autentizace), docs.github.com (adresář konfigurace Copilot CLI, pořadí tokenů) a opencode.ai (konfigurace, umístění dat).</li>
+  <li>opencode bylo navíc ověřeno spuštěním skutečné verze 2.2.5 přes spouštěč profilu. Codex, Gemini a Copilot CLI na testovacím Macu nainstalované nebyly; jejich spouštění je ověřeno automatickými testy s náhradním programem, ne s reálnými účty.</li>
+  <li>Klíčenka macOS je sdílená pro celého uživatele. U Gemini CLI (přihlášení Google účtem) a Copilot CLI proto oddělení přihlášení závisí na tom, jak nástroj ukládá tokeny. Po prvním přihlášení vždy ověřte účet v každém profilu.</li>
+  <li>Datové operace (záloha, obnova) odmítnou pokračovat, pokud daný nástroj běží. Migrace mezi profily dalších nástrojů zatím není k dispozici – použijte zálohu a obnovu, nebo kopírujte konkrétní soubory ručně.</li>
+</ul>
+
+<!-- 6 -->
+<h1 id="zalohy"><span class="num">6</span>Zálohy a přenos na jiný Mac</h1>
+<figure><img src="img/04-zalohy.png" alt=""><figcaption>Obrázek 6 – Seznam záloh s akcemi pro vybranou zálohu</figcaption></figure>
+<p>Obrazovka zobrazuje všechny zálohy a importy v <code>INSTALL_DIR/backups</code> s datem, profilem, rozsahem a počtem položek. Po výběru řádku se ve spodní liště zpřístupní akce; stejné akce nabízí kontextová nabídka.</p>
+
+<h2>Vytvoření zálohy</h2>
+<p>Zálohu vytvoříte v detailu profilu (sekce <i>Zálohy profilu</i>) nebo z rychlých akcí profilu. Každý soubor se po zkopírování kontroluje pomocí SHA-256 a záloha se ihned ověří.</p>
+<div class="warn"><b>Plná záloha obsahuje přihlášení</b>Záloha obsahuje i souborová přihlášení a historii. Adresář záloh je privátní (oprávnění 700), ale data nejsou šifrovaná. Používejte FileVault nebo šifrovaný disk. Keychain, ACL a rozšířená metadata se nezálohují – nejde o náhradu Time Machine.</div>
+
+<h2>Akce se zálohou</h2>
+<table>
+  <tr><th style="width:26%">Akce</th><th>Popis</th></tr>
+  <tr><td><b>Ověřit integritu</b></td><td>Porovná obsah zálohy s jejím manifestem (SHA-256 každého souboru).</td></tr>
+  <tr><td><b>Obnovit…</b></td><td>Přesná obnova snapshotu do <i>původních</i> cest profilu včetně souborových přihlášení. Před obnovou se automaticky vytvoří záloha aktuálního stavu. Vyžaduje potvrzení. U importovaných záloh není dostupná – použijte migraci.</td></tr>
+  <tr><td><b>Exportovat…</b></td><td>Vytvoří archiv <code>.tar.gz</code> a vedle něj soubor <code>.sha256</code>. Absolutní odkazy uvnitř dat se převedou na relativní, externí symlinky se odmítnou. Kontrolní součet se zobrazí v okně.</td></tr>
+  <tr><td><b>Migrovat do profilu…</b></td><td>Otevře Migraci s touto zálohou jako zdrojem.</td></tr>
+  <tr><td><b>Finder</b></td><td>Zobrazí adresář zálohy.</td></tr>
+</table>
+
+<h2>Přenos na jiný Mac</h2>
+<ol class="steps">
+  <li>Na původním Macu vytvořte zálohu a <span class="ui">Exportujte</span> ji. Poznamenejte si zobrazený SHA-256.</li>
+  <li>Archiv přeneste bezpečnou cestou. Kontrolní součet předejte <b>jiným důvěryhodným kanálem</b> – chrání před poškozením, nikoli před podvržením.</li>
+  <li>Na novém Macu zvolte <span class="ui">Importovat archiv…</span>, vyberte soubor a vložte SHA-256 (případně načtěte ze souboru <code>.sha256</code>). Import pouze ověří a bezpečně rozbalí zálohu, žádný profil nemění.</li>
+  <li>Vytvořte cílový profil a v <span class="ui">Migraci</span> zvolte zdroj <i>Ověřená / importovaná záloha</i>. Nejprve proveďte zkoušku, potom migraci.</li>
+</ol>
+<p>Import odmítá path traversal, hardlinky, zařízení, externí symlinky a archivy přesahující limity. Projektové adresáře mimo profil nejsou součástí zálohy – přeneste je samostatně a v migraci použijte přemapování cest.</p>
+
+<!-- 7 -->
+<h1 id="migrace"><span class="num">7</span>Migrace mezi profily</h1>
+<figure><img src="img/05-migrace.png" alt=""><figcaption>Obrázek 7 – Formulář migrace s vybraným zdrojem a cílem</figcaption></figure>
+<p>Migrace přenáší vybrané komponenty z jednoho profilu (nebo ze zálohy) do jiného profilu. Probíhá vždy ve dvou krocích, které ukazuje ukazatel v horní části obrazovky:</p>
+<ol class="steps">
+  <li><b>Zkouška nanečisto (dry-run).</b> Správce připraví a ověří staging, zkontroluje konflikty a vypíše výsledek. Profily se nemění. Zkouška může vyžadovat značné místo na disku.</li>
+  <li><b>Provést migraci.</b> Tlačítko je aktivní jen po úspěšné zkoušce se <i>stejnými</i> parametry. Jakákoli změna formuláře vyžaduje novou zkoušku. Před zápisem se vytvoří záloha cílového profilu.</li>
+</ol>
+
+<h2>Parametry</h2>
+<table>
+  <tr><th style="width:24%">Volba</th><th>Význam</th></tr>
+  <tr><td><b>Zdroj</b></td><td>Profil, nebo ověřená/importovaná záloha.</td></tr>
+  <tr><td><b>Rozsah</b></td><td>Které lokální datové stromy se mění: CLI, Desktop nebo obojí. Nejde o převod CLI na Desktop. U profilů různých typů zvolte společný rozsah.</td></tr>
+  <tr><td><b>Nastavení</b></td><td><code>settings.json</code>, <code>CLAUDE.md</code>, rules, agents, output styles a z <code>.claude.json</code> pouze <code>mcpServers</code> (bez účtu a projektové důvěry).</td></tr>
+  <tr><td><b>Skills</b></td><td>Adresáře <code>skills</code> a legacy <code>commands</code>.</td></tr>
+  <tr><td><b>Pluginy</b></td><td>Instalace a registry pluginů. Aktivace (<code>enabledPlugins</code>) je součástí nastavení – pro plný přenos zvolte obojí.</td></tr>
+  <tr><td><b>Historie</b></td><td>Projekty, <code>history.jsonl</code>, todos, tasks, plány a historie souborů.</td></tr>
+  <tr><td><b>Při konfliktu</b></td><td><i>Zastavit</i> (výchozí, bezpečné) – při rozdílném cílovém souboru se nic nezmění; <i>Ponechat cílový</i>; <i>Nahradit zdrojem</i>. Rozhoduje vaše volba, nikoli čas změny.</td></tr>
+  <tr><td><b>Scratch workspaces</b></td><td>Přenese pracovní adresáře Desktopu (<code>scratch-workspaces</code>) s přemapováním cest.</td></tr>
+  <tr><td><b>CLI .credentials.json</b></td><td>Jen u zdroje typu profil. Kopíruje souborový credential CLI, ne Keychain ani přihlášení Desktopu.</td></tr>
+  <tr><td><b>Přemapování cest</b></td><td>Řádky ve tvaru <code>/stara/cesta=/nova/cesta</code> (absolutní). Přepíší se rozpoznané cesty v historii a zakódované projektové adresáře. Neplatný řádek se zvýrazní červeně.</td></tr>
+</table>
+
+<h2>Historie Desktopu (GUI)</h2>
+<p>Před migrací GUI historie spusťte cílový Desktop profil, přihlaste se, alespoň jednou otevřete Code a vše znovu ukončete. Správce vyžaduje jednoznačný lokální index účtu a organizace. Po přenosu každé sezení skutečně otevřete a ověřte starší zprávy, rozpracovaný stav, pracovní adresář, větev a aktivní účet – samotný název v seznamu není důkazem funkčnosti.</p>
+<div class="note"><b>Divergentní historie</b>Správce záměrně neprovádí automatické slučování JSONL historií po řádcích. Volba <i>Nahradit</i> může zahodit cílovou větev; její předchozí stav zůstane v automatické záloze.</div>
+
+<!-- 8 -->
+<h1 id="projekty"><span class="num">8</span>Projekty</h1>
+<figure><img src="img/06-projekty.png" alt=""><figcaption>Obrázek 8 – Evidence a kopírování projektů</figcaption></figure>
+<h2>Evidence projektu</h2>
+<p><span class="ui">Přidat existující projekt do profilu</span> pouze zaeviduje existující adresář u zvoleného profilu. Nic se nekopíruje.</p>
+<h2>Kopírování projektu</h2>
+<p>Funkce vytvoří <b>nový</b> adresář a ověří kopii včetně necommitnutých souborů a adresáře <code>.git</code>. Existující cíl se nikdy nepřepíše. Postup je stejný jako u migrace: nejdřív <span class="ui">Zkouška nanečisto</span>, potom <span class="ui">Kopírovat</span>.</p>
+<p>Kopírování se odmítne u linked worktree a submodulů (<code>.git</code> jako soubor), registrovaných dalších worktree, explicitního <code>core.worktree</code>, externích alternates, externích symlinků a aktivních Git zámků. Během kopírování nesmí projekt měnit editor, build ani server. Absolutní odkazy dovnitř projektu se v kopii převedou na relativní.</p>
+<div class="tip"><b>Navazující krok</b>Po zkopírování projektu použijte v migraci historie přemapování <code>STARÁ=NOVÁ</code>, aby historie cílového profilu ukazovala na novou kopii.</div>
+
+<!-- 9 -->
+<h1 id="prostredi"><span class="num">9</span>Prostředí a diagnostika</h1>
+<figure class="medium"><img src="img/07-prostredi.png" alt=""><figcaption>Obrázek 9 – Prostředí a diagnostika</figcaption></figure>
+<h2>Cesty ke Claude CLI a Claude Desktop</h2>
+<p><b>Claude Code CLI:</b> zadejte absolutní cestu ke <b>skutečnému</b> spustitelnému souboru <code>claude</code>. Tlačítko <span class="ui">Najít</span> zjistí <code>command -v claude</code> v přihlašovacím shellu; pokud nalezený soubor vede na tohoto správce, aplikace ho odmítne (ochrana proti rekurzi). Uložení cestu ověří.</p>
+<p><b>Claude Desktop:</b> výchozí je <code>/Applications/Claude.app</code>. Pokud máte aplikaci jinde (např. v <code>~/Applications</code>), vyberte ji a uložte. Správce ověří, že jde o balíček Claude.app.</p>
+<h2>PATH v shellu</h2>
+<p>Aby fungovaly příkazy <code>claude-NAZEV</code>, musí být <code>INSTALL_DIR/sbin</code> v proměnné PATH. Tlačítko <span class="ui">Přidat blok do shellu…</span> po potvrzení zazálohuje <code>~/.zshrc</code> (nebo <code>~/.profile</code>) do <code>shell-backups</code> a přidá označený, idempotentní blok. Ostatní obsah souboru zůstane beze změny. Změna se projeví v novém okně Terminálu.</p>
+<p>Řádek <i>INSTALL_DIR/sbin v PATH aktuálního prostředí aplikace</i> může zůstat žlutý i po správném nastavení – grafické aplikace nenačítají <code>.zshrc</code>. Rozhodující je stav bloku v souboru.</p>
+<h2>Diagnostika a obnova</h2>
+<p><span class="ui">Spustit diagnostiku</span> (příkaz <code>doctor</code>) zkontroluje adresáře profilů, překryvy kořenů, Claude binary, PATH a nedokončené transakce či aktualizace. Pokud existuje přerušená transakce, zobrazí se tlačítko <span class="ui">Obnovit přerušenou transakci…</span>. Obnova podle trvanlivého journalu buď dokončí potvrzený commit, nebo vrátí původní kořeny; nová data se při ní záměrně nemažou.</p>
+<div class="warn"><b>Nemažte ručně</b>soubor <code>transaction.json</code> ani adresáře <code>.cm-old-*</code>, <code>.cm-stage-*</code> či <code>.cm-recovered-*</code>, dokud nezkontrolujete receipts a ověřenou zálohu. Přerušenou <i>aktualizaci</i> obnovíte z nového balíčku příkazem <code>update.sh INSTALL_DIR --recover --yes</code>.</div>
+
+<!-- 10 -->
+<h1 id="protokol"><span class="num">10</span>Protokol činností</h1>
+<figure><img src="img/08-protokol.png" alt=""><figcaption>Obrázek 10 – Protokol činností</figcaption></figure>
+<p>Protokol zaznamenává každý příkaz, který aplikace předala <code>claude-manager.py</code> – přesný příkazový řádek, návratový kód, výstup a chybový výstup. Slouží k:</p>
+<ul>
+  <li>kontrole, co přesně aplikace provedla (transparentnost),</li>
+  <li>zjištění podrobností chyby, např. seznamu PID běžících procesů Claude,</li>
+  <li>zopakování operace v Terminálu – tlačítko <span class="ui">Kopírovat</span> zkopíruje příkaz i výstup.</li>
+</ul>
+<p>Protokol se uchovává jen po dobu běhu aplikace (posledních 300 záznamů) a lze ho vymazat tlačítkem na panelu nástrojů.</p>
+
+<!-- 11 -->
+<h1 id="bezpecnost"><span class="num">11</span>Bezpečnostní model a omezení</h1>
+<table>
+  <tr><th style="width:28%">Zásada</th><th>Co to znamená v praxi</th></tr>
+  <tr><td><b>Žádné neohlášené přepisy</b></td><td>Migrace a kopie projektů vždy začínají zkouškou; zápis vyžaduje výslovné potvrzení. Výchozí reakce na konflikt je chyba.</td></tr>
+  <tr><td><b>Zálohy před zápisem</b></td><td>Migrace, obnova, úprava nastavení i změna typu vytvoří a ověří zálohu cíle. Zápis probíhá přes staging a journal.</td></tr>
+  <tr><td><b>Zastavená data</b></td><td>Datové operace vyžadují ukončené Claude CLI, Desktop i Code v editorech. Správce používá zámky a kontrolu procesů, ale nezabrání spuštění nezávislého procesu.</td></tr>
+  <tr><td><b>Přihlášení</b></td><td>Běžná migrace nekopíruje <code>.credentials.json</code>, účtový <code>.claude.json</code>, cookies, OAuth databáze ani Keychain.</td></tr>
+  <tr><td><b>Důvěra</b></td><td>Skills, pluginy, hooks a MCP mohou spouštět kód. Kopírujte je jen z důvěryhodných profilů a respektujte pravidla zaměstnavatele.</td></tr>
+  <tr><td><b>Místo na disku</b></td><td>Staging a zálohy mohou zabrat několikanásobek velikosti dat. Staré zálohy se automaticky nemažou.</td></tr>
+</table>
+<h2>Co není garantováno</h2>
+<ul>
+  <li>Parametr <code>--user-data-dir</code> a interní soubory sezení Desktopu nejsou stabilní veřejné API; aktualizace Claude může kompatibilitu změnit.</li>
+  <li>Není zaručeno, že interní Code proces Desktopu převezme <code>CLAUDE_CONFIG_DIR</code>. Počítejte s možným společným <code>~/.claude</code> a ověřte chování vaší verze.</li>
+  <li>Skills a pluginy spravované v Desktopu (Customize) a cloudová historie nejsou totožné s lokální konfigurací CLI.</li>
+</ul>
+<p>Před ostrým použitím doporučujeme pilotní test s prázdným CLI a Desktop profilem.</p>
+
+<!-- 12 -->
+<h1 id="problemy"><span class="num">12</span>Řešení problémů</h1>
+<table>
+  <tr><th style="width:40%">Hlášení</th><th>Příčina a řešení</th></tr>
+  <tr><td><code>Close all Claude GUI/CLI/editor sessions before data operations. PIDs: …</code></td><td>Běží Claude CLI, Desktop nebo Code v editoru. Ukončete je (včetně terminálových sezení a rozšíření v editorech) a operaci zopakujte. Seznam PID najdete v protokolu.</td></tr>
+  <tr><td><code>Profile/manager is busy</code></td><td>Jiná operace správce právě drží zámek (např. probíhá záloha v Terminálu). Počkejte na její dokončení.</td></tr>
+  <tr><td><code>Interrupted transaction detected. Run: recover</code></td><td>Předchozí operace byla přerušena. Ukončete Claude a v části Prostředí spusťte obnovu.</td></tr>
+  <tr><td><code>Claude CLI not found</code> / <code>Not an executable absolute Claude path</code></td><td>Nastavte cestu ke Claude CLI v části Prostředí.</td></tr>
+  <tr><td><code>Recursive wrapper detected</code></td><td>Zadaná cesta vede na spouštěč tohoto správce. Vyberte skutečný binary Claude.</td></tr>
+  <tr><td><code>Another Claude Desktop process is active</code></td><td>Běží jiná instance Claude Desktop. Ukončete ji (<kbd>⌘</kbd><kbd>Q</kbd>) a spusťte profil znovu.</td></tr>
+  <tr><td><code>Directory exists; use register…</code></td><td>Cílový adresář nového profilu již existuje. Použijte registraci, nebo zvolte jinou cestu.</td></tr>
+  <tr><td><code>Overlapping profile roots</code> / <code>Unsafe managed root</code></td><td>Cesta je shodná, vnořená nebo nadřazená jinému profilu či chráněnému adresáři. Zvolte samostatný adresář.</td></tr>
+  <tr><td><code>Archive SHA-256 mismatch</code></td><td>Archiv je poškozený, nebo nesouhlasí kontrolní součet. Archiv nepoužívejte a přeneste ho znovu.</td></tr>
+  <tr><td><code>Refusing to overwrite launcher/unowned app</code></td><td>Na místě spouštěče je soubor, který nevytvořil tento správce. Přesuňte ho ručně.</td></tr>
+  <tr><td>Aplikace hlásí, že správce není nastaven</td><td>Otevřete Nastavení (<kbd>⌘</kbd><kbd>,</kbd>) a vyberte <code>claude-manager.py</code> a Python 3.9+.</td></tr>
+  <tr><td>Příkaz <code>claude-NAZEV</code> v Terminálu neexistuje</td><td>Přidejte PATH blok v části Prostředí a otevřete nové okno Terminálu. Ověřte, že byly vygenerovány spouštěče.</td></tr>
+  <tr><td><code>Close all OpenAI Codex CLI sessions…</code> (a obdobně u dalších nástrojů)</td><td>Daný nástroj běží. Ukončete ho a zálohu nebo obnovu zopakujte.</td></tr>
+  <tr><td><code>… not found. Configure: tool-set-binary</code></td><td>Nástroj není nainstalovaný nebo není v PATH aplikace. Nainstalujte ho, nebo nastavte cestu na obrazovce nástroje.</td></tr>
+  <tr><td>V profilu Copilot / Gemini je přihlášen jiný účet</td><td>Zkontrolujte, zda nemáte zapnuté dědění proměnných (<code>GH_TOKEN</code>, <code>GEMINI_API_KEY</code>…). U Copilotu přepněte účet příkazem <code>/user switch</code> nebo <code>/logout</code> a <code>/login</code>.</td></tr>
+  <tr><td>Po přesunutí INSTALL_DIR nefungují ikony v Docku</td><td>Spouštěče obsahují absolutní cesty. V detailu každého profilu je vygenerujte znovu.</td></tr>
+</table>
+
+<!-- 13 -->
+<h1 id="zkratky"><span class="num">13</span>Klávesové zkratky a příkazy</h1>
+<table>
+  <tr><th style="width:30%">Zkratka</th><th>Akce</th></tr>
+  <tr><td><kbd>⌘</kbd><kbd>N</kbd></td><td>Nový profil</td></tr>
+  <tr><td><kbd>⇧</kbd><kbd>⌘</kbd><kbd>N</kbd></td><td>Zaregistrovat existující data</td></tr>
+  <tr><td><kbd>⌘</kbd><kbd>R</kbd></td><td>Obnovit profily, zálohy a diagnostiku</td></tr>
+  <tr><td><kbd>⌘</kbd><kbd>1</kbd> … <kbd>⌘</kbd><kbd>5</kbd></td><td>Přehled, Zálohy, Migrace, Projekty, Prostředí</td></tr>
+  <tr><td><kbd>⌘</kbd><kbd>L</kbd></td><td>Protokol činností</td></tr>
+  <tr><td><kbd>⌘</kbd><kbd>,</kbd></td><td>Nastavení aplikace (umístění správce a Pythonu)</td></tr>
+  <tr><td><kbd>⌘</kbd><kbd>?</kbd></td><td>Tato nápověda</td></tr>
+  <tr><td><kbd>⌘</kbd><kbd>S</kbd></td><td>V editoru nastavení: zazálohovat a uložit</td></tr>
+</table>
+<h2>Odpovídající příkazy v Terminálu</h2>
+<p>Každá akce aplikace odpovídá příkazu <code>claude-manager.py</code>; přesné znění vždy uvidíte v protokolu.</p>
+<table>
+  <tr><th style="width:38%">Akce v aplikaci</th><th>Příkaz</th></tr>
+  <tr><td>Nový profil</td><td><code>create NAZEV --type both --yes</code></td></tr>
+  <tr><td>Registrace</td><td><code>register NAZEV --cli-dir … --gui-dir … --yes</code></td></tr>
+  <tr><td>Spouštěče</td><td><code>launchers NAZEV</code></td></tr>
+  <tr><td>Spustit CLI / Desktop</td><td><code>cli NAZEV</code> / <code>gui NAZEV</code></td></tr>
+  <tr><td>Dědění proměnných</td><td><code>auth-env NAZEV inherit|clean</code></td></tr>
+  <tr><td>Změna typu</td><td><code>set-type NAZEV cli|gui|both --yes</code></td></tr>
+  <tr><td>Úprava nastavení</td><td><code>edit-settings NAZEV --scope cli|gui --yes</code></td></tr>
+  <tr><td>Záloha / ověření / obnova</td><td><code>backup</code>, <code>verify</code>, <code>restore … --yes</code></td></tr>
+  <tr><td>Export / import</td><td><code>export ZALOHA ARCHIV</code>, <code>import ARCHIV --sha256 …</code></td></tr>
+  <tr><td>Migrace</td><td><code>migrate</code> / <code>migrate-backup</code> (+ <code>--apply --yes</code>)</td></tr>
+  <tr><td>Projekty</td><td><code>project-add</code>, <code>project-copy</code> (+ <code>--apply --yes</code>)</td></tr>
+  <tr><td>Další AI nástroje</td><td><code>tool-create</code>, <code>tool-register</code>, <code>tool-run</code>, <code>tool-launchers</code>, <code>tool-backup</code>, <code>tool-restore</code>, <code>tool-auth-env</code></td></tr>
+  <tr><td>Prostředí</td><td><code>set-binary</code>, <code>set-gui-app</code>, <code>path --write --yes</code>, <code>doctor</code>, <code>recover</code></td></tr>
+</table>
+
+<!-- 14 -->
+<h1 id="glosar"><span class="num">14</span>Slovníček pojmů</h1>
+<table>
+  <tr><th style="width:28%">Pojem</th><th>Význam</th></tr>
+  <tr><td><b>Profil</b></td><td>Pojmenované, oddělené prostředí Claude s vlastními daty a přihlášením.</td></tr>
+  <tr><td><b>INSTALL_DIR</b></td><td>Adresář s <code>claude-manager.py</code>, registrem profilů, spouštěči a zálohami.</td></tr>
+  <tr><td><b>Datový kořen</b></td><td>Adresář s daty části profilu (CLI nebo Desktop).</td></tr>
+  <tr><td><b>Spouštěč</b></td><td>Symlink <code>claude-NAZEV</code> nebo aplikace <code>Claude NAZEV.app</code>, které spustí Claude se správným profilem.</td></tr>
+  <tr><td><b>Zkouška nanečisto (dry-run)</b></td><td>Příprava a ověření operace ve stagingu bez změny profilů.</td></tr>
+  <tr><td><b>Staging</b></td><td>Dočasná skrytá kopie (<code>.cm-stage-*</code>), ve které se změna připraví a ověří.</td></tr>
+  <tr><td><b>Journal / transakce</b></td><td>Trvanlivý záznam (<code>transaction.json</code>) umožňující dokončit nebo vrátit přerušené přepnutí dat.</td></tr>
+  <tr><td><b>Komponenta</b></td><td>Část dat pro migraci: nastavení, skills, pluginy, historie.</td></tr>
+  <tr><td><b>Rozsah (scope)</b></td><td>Které datové stromy operace mění: CLI, Desktop, nebo obojí.</td></tr>
+  <tr><td><b>Přemapování (map)</b></td><td>Pravidlo <code>STARÁ=NOVÁ</code> pro přepis cest projektů v historii.</td></tr>
+</table>
+
+<h1 id="verze" class="cont"><span class="num">15</span>Historie verzí</h1>
+<table>
+  <tr><th style="width:16%">Verze</th><th>Změny</th></tr>
+  <tr><td><b>1.2.0</b><br>listopad 2026</td><td>Profily pro OpenAI Codex CLI, Google Gemini CLI, GitHub Copilot CLI a opencode: vytvoření, registrace, spouštěče <code>NASTROJ-NAZEV</code>, oddělení autentizačních proměnných, zálohy a obnova. Nativní grafická aplikace pro macOS s nápovědou v PDF a zobrazením verze aplikace i správce.</td></tr>
+  <tr><td><b>1.1.0</b></td><td>Typy profilů CLI / Desktop / obojí, aktualizátor <code>update.sh</code> s obnovou, editor nastavení.</td></tr>
+  <tr><td><b>1.0.0</b></td><td>První verze: kombinované profily Claude CLI a Desktop, zálohy, migrace, kopírování projektů.</td></tr>
+</table>
+<p style="margin-top:24pt;color:var(--muted);font-size:9pt">Claude Profile Manager je nezávislý nástroj komunity a není produktem společností Anthropic, OpenAI, Google, GitHub ani autorů opencode. Uvedené názvy jsou ochranné známky svých vlastníků.</p>
+
+</body>
+</html>

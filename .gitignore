@@ -11,3 +11,7 @@ __pycache__/
 /sbin/
 /Applications/
 .cm-*
+
+# macOS GUI build outputs
+/gui/.build/
+/gui/build/

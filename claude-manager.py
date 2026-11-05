@@ -22,7 +22,7 @@ import time
 import uuid
 from pathlib import Path
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 SCRIPT = Path(__file__).resolve()
 ROOT = SCRIPT.parent
 NAME_RE = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
@@ -39,6 +39,44 @@ RESET_SESSION = {
     "sessionPermissionUpdates": [], "alwaysAllowedReasons": [],
     "permissionMode": "default", "chromePermissionMode": "ask_permission",
     "bypassChosenInApp": False, "remoteControlAutoEligible": False,
+}
+
+
+# Other AI coding CLIs with a documented per-user state directory override.
+# Sources (checked 2026-11): developers.openai.com/codex (CODEX_HOME, cli_auth_credentials_store,
+# CODEX_API_KEY); geminicli.com/docs/cli/enterprise + get-started/authentication (GEMINI_CLI_HOME);
+# docs.github.com/copilot/reference/copilot-cli-reference/cli-config-dir-reference + authenticate
+# (COPILOT_HOME, COPILOT_CACHE_HOME, token precedence); opencode.ai/docs/config + troubleshooting
+# (XDG config/data/state/cache dirs, verified with `opencode debug paths`).
+TOOLS = {
+    "codex": {
+        "title": "OpenAI Codex CLI", "binary": "codex", "packages": ("@openai/codex",),
+        "register": True,
+        # Codex ignores OPENAI_API_KEY for login, but API-key env vars must never silently
+        # replace the profile's ChatGPT login.
+        "auth_env": ("CODEX_API_KEY", "OPENAI_API_KEY", "OPENAI_BASE_URL"),
+    },
+    "gemini": {
+        "title": "Google Gemini CLI", "binary": "gemini", "packages": ("@google/gemini-cli",),
+        "register": True,
+        "auth_env": ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_APPLICATION_CREDENTIALS",
+                     "GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_PROJECT_ID", "GOOGLE_CLOUD_LOCATION",
+                     "GOOGLE_GENAI_USE_VERTEXAI"),
+    },
+    "copilot": {
+        "title": "GitHub Copilot CLI", "binary": "copilot", "packages": ("@github/copilot",),
+        "register": True,
+        # Documented precedence: these env tokens override the account stored by /login.
+        "auth_env": ("COPILOT_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"),
+    },
+    "opencode": {
+        "title": "opencode", "binary": "opencode", "packages": ("opencode-ai",),
+        "register": False,  # State is split over four XDG roots; only managed layout.
+        "auth_env": ("OPENCODE_CONFIG", "OPENCODE_CONFIG_DIR", "OPENCODE_CONFIG_CONTENT",
+                     "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY",
+                     "GOOGLE_GENERATIVE_AI_API_KEY", "OPENROUTER_API_KEY", "GROQ_API_KEY",
+                     "XAI_API_KEY", "MISTRAL_API_KEY", "DEEPSEEK_API_KEY"),
+    },
 }
 
 
@@ -373,7 +411,7 @@ class Manager:
                 fail(f"Unsafe managed root: {r}")
             if r in self.root.parents or r in self.home.parents:
                 fail(f"Managed root is an ancestor of home/installation: {r}")
-        all_roots = roots[:]
+        all_roots = roots[:] + self.all_tool_roots()
         for n in self.cfg["profiles"]:
             if n != name:
                 all_roots.extend(self.profile(n).values())
@@ -557,6 +595,7 @@ class Manager:
                 not isinstance(j.get("entries"), list)):
             fail("Unknown journal schema; manual recovery required")
         allowed = {str(p) for n in self.cfg["profiles"] for p in self.profile(n).values()}
+        allowed |= {str(p) for p in self.all_tool_roots()}
         if str(self.home / ".claude") in allowed:
             allowed.add(str(self.home / ".claude.json"))
         for e in j["entries"]:
@@ -1277,8 +1316,284 @@ class Manager:
             if stage.exists() and not self.journal.exists():
                 shutil.rmtree(stage)
 
+    # ----- Other AI coding CLIs (Codex, Gemini, Copilot, opencode) -----
+
+    def tool_spec(self, tool):
+        if tool not in TOOLS:
+            fail(f"Unknown tool: {tool}. Supported: {', '.join(TOOLS)}")
+        return TOOLS[tool]
+
+    def tool_registry(self, tool=None):
+        reg = self.cfg.get("tools", {})
+        if not isinstance(reg, dict):
+            fail("Invalid tools registry in manager.json")
+        if tool is None:
+            return reg
+        self.tool_spec(tool)
+        entry = reg.get(tool, {})
+        if not isinstance(entry, dict) or not isinstance(entry.get("profiles", {}), dict):
+            fail(f"Invalid registry for tool {tool}")
+        return entry
+
+    def tool_profile(self, tool, name):
+        self.name(name)
+        p = self.tool_registry(tool).get("profiles", {}).get(name)
+        if not isinstance(p, dict) or not isinstance(p.get("root"), str):
+            fail(f"Unknown {tool} profile: {name}")
+        return p
+
+    def tool_root(self, tool, name):
+        return safe_abs(self.tool_profile(tool, name)["root"])
+
+    def tool_cache(self, tool, name):
+        # Caches stay outside the profile root, so backups do not carry disposable data.
+        return safe_abs(self.root / "cache" / f"{tool}-{name}")
+
+    def all_tool_roots(self, skip=None):
+        out = []
+        for tool in TOOLS:
+            for n, p in self.tool_registry(tool).get("profiles", {}).items():
+                if (tool, n) != skip and isinstance(p, dict) and isinstance(p.get("root"), str):
+                    out.append(safe_abs(p["root"]))
+        return out
+
+    def validate_tool_root(self, tool, name, root):
+        forbidden = [self.home, self.root, self.root / "backups", self.root / "tool-backups",
+                     self.root / "exports", self.root / "locks", self.root / "cache"]
+        if root in forbidden or str(root) == "/" or any(f in root.parents for f in forbidden[2:]):
+            fail(f"Unsafe managed root: {root}")
+        if root in self.root.parents or root in self.home.parents:
+            fail(f"Managed root is an ancestor of home/installation: {root}")
+        others = self.all_tool_roots(skip=(tool, name))
+        for n in self.cfg["profiles"]:
+            others.extend(self.profile(n).values())
+        for o in others:
+            if o == root or o in root.parents or root in o.parents:
+                fail(f"Overlapping profile roots: {root}, {o}")
+
+    def tool_env(self, tool, name):
+        """Environment overrides that point the tool at this profile only."""
+        root = self.tool_root(tool, name)
+        if tool == "codex":
+            return {"CODEX_HOME": str(root)}
+        if tool == "gemini":
+            # Gemini CLI creates/uses GEMINI_CLI_HOME/.gemini.
+            return {"GEMINI_CLI_HOME": str(root)}
+        if tool == "copilot":
+            return {"COPILOT_HOME": str(root),
+                    "COPILOT_CACHE_HOME": str(self.tool_cache(tool, name))}
+        return {"XDG_CONFIG_HOME": str(root / "config"), "XDG_DATA_HOME": str(root / "data"),
+                "XDG_STATE_HOME": str(root / "state"),
+                "XDG_CACHE_HOME": str(self.tool_cache(tool, name))}
+
+    def tool_create(self, tool, name, directory=None, existing=False):
+        spec = self.tool_spec(tool)
+        self.name(name)
+        if name in self.tool_registry(tool).get("profiles", {}):
+            fail(f"{tool} profile already exists: {name}")
+        if existing:
+            if not spec["register"]:
+                fail(f"{spec['title']} keeps state in several XDG roots; create a managed profile instead.")
+            if not directory:
+                fail("Registering requires --dir with the existing state directory")
+        root = safe_abs(directory or self.root / "tools" / tool / name)
+        self.validate_tool_root(tool, name, root)
+        if existing:
+            if not root.is_dir():
+                fail(f"Not an existing directory: {root}")
+            if tool == "gemini" and not (root / ".gemini").is_dir():
+                fail("GEMINI_CLI_HOME must contain a .gemini directory; ~ itself cannot be registered.")
+        elif exists(root):
+            fail("Directory exists; use tool-register to adopt it without modifying contents.")
+        tools = self.cfg.setdefault("tools", {})
+        entry = tools.setdefault(tool, {"binary": "", "profiles": {}})
+        entry.setdefault("profiles", {})[name] = {"root": str(root), "inherit_auth_env": False,
+                                                  "registered": bool(existing)}
+        self.save()
+        if not existing:
+            root.mkdir(mode=0o700, parents=True, exist_ok=True)
+            if tool == "codex":
+                # Keep the ChatGPT login in this profile instead of the shared OS keyring.
+                atomic_bytes(root / "config.toml",
+                             b"# Created by Claude Profile Manager: per-profile file login.\n"
+                             b'cli_auth_credentials_store = "file"\n')
+            elif tool == "gemini":
+                (root / ".gemini").mkdir(mode=0o700, exist_ok=True)
+            elif tool == "opencode":
+                for sub in ("config", "data", "state"):
+                    (root / sub).mkdir(mode=0o700, exist_ok=True)
+        return {"tool": tool, "profile": name, **entry["profiles"][name]}
+
+    def tool_unregister(self, tool, name):
+        root = self.tool_root(tool, name)
+        del self.cfg["tools"][tool]["profiles"][name]
+        self.save()
+        return {"tool": tool, "profile": name, "data_retained": str(root)}
+
+    def find_tool_binary(self, tool):
+        spec = self.tool_spec(tool)
+        value = self.tool_registry(tool).get("binary") or shutil.which(spec["binary"])
+        if not value:
+            fail(f"{spec['title']} not found. Configure: tool-set-binary {tool} /absolute/path")
+        p = Path(value).expanduser()
+        if not p.is_absolute() or not p.is_file() or not os.access(p, os.X_OK):
+            fail(f"Not an executable absolute {tool} path: {p}")
+        if p.resolve() == SCRIPT or p.resolve().name == "claude-manager.py":
+            fail(f"Recursive wrapper detected; set the REAL {tool} executable.")
+        return p
+
+    def tool_set_binary(self, tool, path):
+        entry = self.cfg.setdefault("tools", {}).setdefault(tool, {"binary": "", "profiles": {}})
+        old = entry.get("binary", "")
+        entry["binary"] = str(Path(path).expanduser().absolute())
+        try:
+            self.find_tool_binary(tool)
+        except BaseException:
+            entry["binary"] = old
+            raise
+        self.save()
+        return {"tool": tool, "binary": entry["binary"]}
+
+    def tool_processes(self, tool):
+        spec = self.tool_spec(tool)
+        try:
+            p = subprocess.run(["ps", "-axo", "pid=,args="], capture_output=True,
+                               text=True, check=True)
+        except (OSError, subprocess.SubprocessError) as e:
+            raise Error(f"Cannot inspect running processes: {e}") from e
+        binary = self.tool_registry(tool).get("binary")
+        pattern = re.compile(r"(?:^|/)" + re.escape(spec["binary"]) + r"(?:\s|$)")
+        result = []
+        for line in p.stdout.splitlines():
+            fields = line.strip().split(None, 1)
+            if len(fields) != 2 or int(fields[0]) == os.getpid():
+                continue
+            cmd = fields[1]
+            if (pattern.search(cmd) or any(pkg in cmd for pkg in spec["packages"]) or
+                    (binary and (cmd == binary or cmd.startswith(binary + " ")))):
+                result.append((int(fields[0]), cmd))
+        return result
+
+    def tool_cold(self, tool):
+        running = self.tool_processes(tool)
+        if running:
+            fail(f"Close all {self.tool_spec(tool)['title']} sessions before data operations. PIDs: " +
+                 ", ".join(str(p[0]) for p in running))
+
+    def tool_lock_name(self, tool, name):
+        return f"{tool}.{name}"  # Dot cannot occur in Claude profile names: no lock collisions.
+
+    def launch_tool(self, tool, name, args):
+        binary = self.find_tool_binary(tool)
+        profile = self.tool_profile(tool, name)
+        root = self.tool_root(tool, name)
+        if not root.is_dir():
+            fail(f"Missing profile directory: {root}")
+        with self.lock([self.tool_lock_name(tool, name)], shared=True) as handles:
+            profile_lock = handles[-1]
+            os.set_inheritable(profile_lock.fileno(), True)
+            handles[0].close()
+            env = dict(os.environ)
+            if not profile.get("inherit_auth_env", False):
+                for key in self.tool_spec(tool)["auth_env"]:
+                    env.pop(key, None)
+            env.update(self.tool_env(tool, name))
+            for key in ("XDG_CACHE_HOME", "COPILOT_CACHE_HOME"):
+                if key in env and env[key].startswith(str(self.root / "cache")):
+                    Path(env[key]).mkdir(mode=0o700, parents=True, exist_ok=True)
+            try:
+                os.execve(str(binary), [str(binary), *args], env)
+            except OSError as e:
+                print(f"{tool} launch failed ({name}): {e}", file=sys.stderr)
+                return 127 if e.errno == errno.ENOENT else 126
+
+    def tool_launcher(self, tool, name):
+        self.tool_profile(tool, name)
+        bindir = safe_abs(self.root / "sbin")
+        bindir.mkdir(mode=0o700, exist_ok=True)
+        link = bindir / f"{tool}-{name}"
+        if exists(link):
+            if not link.is_symlink() or link.resolve() != SCRIPT:
+                fail(f"Refusing to overwrite launcher: {link}")
+        else:
+            link.symlink_to(os.path.relpath(SCRIPT, bindir))
+        return {"launcher": str(link), "path_status": self.path_setup()}
+
+    def tool_backup(self, tool, name):
+        root = self.tool_root(tool, name)
+        if not root.is_dir():
+            fail(f"Missing profile directory: {root}")
+        base = safe_abs(self.root / "tool-backups")
+        base.mkdir(mode=0o700, exist_ok=True)
+        out = base / (time.strftime("%Y%m%d-%H%M%S-") + f"{tool}-{name}-" + uuid.uuid4().hex[:8])
+        out.mkdir(mode=0o700)
+        manifest = {"format": "tool-1", "tool": tool, "profile": name, "root": str(root),
+                    "created": time.time(), "complete": False, "files": {}}
+        atomic_json(out / "manifest.json", manifest)
+        copy_tree(root, out / "data")
+        manifest["files"] = inventory(out / "data")
+        manifest["complete"] = True
+        atomic_json(out / "manifest.json", manifest)
+        self.tool_verify(out)
+        return out
+
+    def tool_verify(self, backup):
+        backup = safe_abs(backup)
+        m = object_json(backup / "manifest.json")
+        if (m.get("format") != "tool-1" or m.get("complete") is not True or
+                m.get("tool") not in TOOLS or not isinstance(m.get("files"), dict) or
+                not isinstance(m.get("root"), str)):
+            fail("Invalid/incomplete tool backup manifest")
+        if {p.name for p in backup.iterdir()} != {"manifest.json", "data"}:
+            fail("Unexpected/missing files in backup root")
+        if inventory(backup / "data") != m["files"]:
+            fail("Backup integrity mismatch")
+        return m
+
+    def tool_restore(self, tool, name, backup):
+        m = self.tool_verify(backup)
+        root = self.tool_root(tool, name)
+        if m["tool"] != tool or m["root"] != str(root):
+            fail("Exact restore requires the same tool and original root path.")
+        current = self.tool_backup(tool, name)
+        stage = root.parent / (".cm-stage-" + uuid.uuid4().hex)
+        copy_tree(Path(backup) / "data", stage)
+        self.tool_cold(tool)
+        self.transaction([(root, stage)])
+        return current
+
+    def tool_list(self):
+        out = {}
+        for tool, spec in TOOLS.items():
+            entry = self.tool_registry(tool)
+            try:
+                binary, error = str(self.find_tool_binary(tool)), None
+            except Error as e:
+                binary, error = None, str(e)
+            profiles = {}
+            for n, p in sorted(entry.get("profiles", {}).items()):
+                link = self.root / "sbin" / f"{tool}-{n}"
+                profiles[n] = {**p, "env": self.tool_env(tool, n),
+                               "launcher": str(link) if link.is_symlink() else None}
+            out[tool] = {"title": spec["title"], "binary": binary, "binary_error": error,
+                         "configured_binary": entry.get("binary", ""),
+                         "can_register": spec["register"], "auth_env": list(spec["auth_env"]),
+                         "profiles": profiles}
+        return out
+
     def doctor(self):
         issues = []
+        for tool in TOOLS:
+            try:
+                profiles = self.tool_registry(tool).get("profiles", {})
+                for n in profiles:
+                    root = self.tool_root(tool, n)
+                    if not root.is_dir():
+                        issues.append(f"{tool}/{n}: missing directory {root}")
+                if profiles:
+                    self.find_tool_binary(tool)
+            except Error as e:
+                issues.append(str(e))
         for n in self.cfg["profiles"]:
             try:
                 p = self.profile(n)
@@ -1380,6 +1695,40 @@ def parser():
     s.add_argument("name")
     s.add_argument("--scope", choices=("cli", "gui"), default="cli")
     s.add_argument("--yes", action="store_true")
+    tools = tuple(TOOLS)
+    s = sub.add_parser("tool-list")
+    for verb in ("tool-create", "tool-register"):
+        s = sub.add_parser(verb)
+        s.add_argument("tool", choices=tools)
+        s.add_argument("name")
+        s.add_argument("--dir", required=(verb == "tool-register"))
+        s.add_argument("--yes", action="store_true")
+    s = sub.add_parser("tool-unregister")
+    s.add_argument("tool", choices=tools)
+    s.add_argument("name")
+    s.add_argument("--yes", action="store_true")
+    s = sub.add_parser("tool-set-binary")
+    s.add_argument("tool", choices=tools)
+    s.add_argument("path")
+    s = sub.add_parser("tool-auth-env")
+    s.add_argument("tool", choices=tools)
+    s.add_argument("name")
+    s.add_argument("mode", choices=("inherit", "clean"))
+    for verb in ("tool-launchers", "tool-backup"):
+        s = sub.add_parser(verb)
+        s.add_argument("tool", choices=tools)
+        s.add_argument("name")
+    s = sub.add_parser("tool-verify")
+    s.add_argument("backup")
+    s = sub.add_parser("tool-restore")
+    s.add_argument("tool", choices=tools)
+    s.add_argument("name")
+    s.add_argument("backup")
+    s.add_argument("--yes", action="store_true")
+    s = sub.add_parser("tool-run")
+    s.add_argument("tool", choices=tools)
+    s.add_argument("name")
+    s.add_argument("args", nargs=argparse.REMAINDER)
     for verb in ("gui", "cli"):
         s = sub.add_parser(verb)
         s.add_argument("name")
@@ -1388,8 +1737,48 @@ def parser():
     return p
 
 
+def dispatch_tool(m, a):
+    command = a.command
+    if command == "tool-run":
+        return m.launch_tool(a.tool, a.name, a.args)
+    if command == "tool-verify":
+        with m.lock(allow_pending=True):
+            manifest = m.tool_verify(Path(a.backup))
+            return {"valid": True, "tool": manifest["tool"], "profile": manifest["profile"],
+                    "entries": len(manifest["files"])}
+    if command == "tool-list":
+        with m.lock(allow_pending=True):
+            return m.tool_list()
+    names = [m.tool_lock_name(a.tool, a.name)] if getattr(a, "name", None) else []
+    with m.lock(names):
+        if command in ("tool-create", "tool-register"):
+            confirm(a, "Creating/registering a profile changes manager state.")
+            return m.tool_create(a.tool, a.name, a.dir, command == "tool-register")
+        if command == "tool-unregister":
+            confirm(a, "Unregistering keeps the data directory but removes the profile from the registry.")
+            return m.tool_unregister(a.tool, a.name)
+        if command == "tool-set-binary":
+            return m.tool_set_binary(a.tool, a.path)
+        if command == "tool-auth-env":
+            m.tool_profile(a.tool, a.name)["inherit_auth_env"] = a.mode == "inherit"
+            m.save()
+            return {"tool": a.tool, "profile": a.name, "inherit_auth_env": a.mode == "inherit"}
+        if command == "tool-launchers":
+            return m.tool_launcher(a.tool, a.name)
+        if command == "tool-backup":
+            m.tool_cold(a.tool)
+            return {"backup": str(m.tool_backup(a.tool, a.name))}
+        if command == "tool-restore":
+            confirm(a, "Exact restore replaces the profile directory.")
+            m.tool_cold(a.tool)
+            return {"pre_restore_backup": str(m.tool_restore(a.tool, a.name, Path(a.backup)))}
+    fail("Unknown command")
+
+
 def dispatch(m, a):
     command = a.command
+    if command and command.startswith("tool-"):
+        return dispatch_tool(m, a)
     if command == "cli":
         return m.launch_cli(a.name, a.args)
     if command == "gui":
@@ -1522,6 +1911,7 @@ def menu(m):
         "15": ("Register project directory", None),
         "16": ("Edit CLI / GUI settings (backup + editor + validation)", None),
         "17": ("Change profile type (CLI / GUI / both; preserve disabled data)", None),
+        "18": ("Other AI CLIs: Codex / Gemini / Copilot / opencode", None),
     }
     def ask(label):
         return input(label + ": ").strip()
@@ -1632,6 +2022,24 @@ def menu(m):
                 n, kind = ask("Name"), ask("New type cli/gui/both")
                 if yes("Back up active roots and change type without deleting data"):
                     run(["set-type", n, kind, "--yes"])
+            elif choice == "18":
+                tool = ask("Tool " + "/".join(TOOLS))
+                action = ask("list/create/register/launchers/run/backup")
+                if action == "list":
+                    run(["tool-list"])
+                elif action in ("create", "register"):
+                    n = ask("Profile name")
+                    args = ["tool-" + action, tool, n]
+                    d = ask("Directory" + (" (empty = default)" if action == "create" else ""))
+                    if d:
+                        args += ["--dir", d]
+                    if yes("Save profile"):
+                        run(args + ["--yes"])
+                        run(["tool-launchers", tool, n])
+                elif action in ("launchers", "backup"):
+                    run(["tool-" + action, tool, ask("Profile name")])
+                elif action == "run":
+                    run(["tool-run", tool, ask("Profile name")])
             else:
                 print("Unknown selection.")
         except (Error, OSError, ValueError, subprocess.SubprocessError) as e:
@@ -1650,6 +2058,9 @@ def main(argv=None):
         # Symlink basename, not resolved script name, chooses the profile.
         if invoked.startswith("claude-") and invoked != "claude-manager.py":
             return m.launch_cli(invoked[len("claude-"):], argv)
+        for tool in TOOLS:
+            if invoked.startswith(tool + "-"):
+                return m.launch_tool(tool, invoked[len(tool) + 1:], argv)
         if not argv:
             return menu(m)
         a = parser().parse_args(argv)
