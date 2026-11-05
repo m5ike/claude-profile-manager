@@ -82,77 +82,94 @@ struct SidebarView: View {
 
     var body: some View {
         List(selection: $store.selection) {
-            Section("Správce") {
-                Label("Přehled", systemImage: "square.grid.2x2").tag(SidebarItem.overview)
+            Section {
+                SidebarRow(title: "Přehled", symbol: "square.grid.2x2.fill", color: Brand.accent)
+                    .tag(SidebarItem.overview)
             }
-            Section("Profily") {
+            Section("Profily Claude") {
                 if store.config.profiles.isEmpty {
                     Text("Zatím žádné profily").foregroundStyle(.secondary).font(.callout)
                 }
                 ForEach(store.config.profiles) { p in
-                    Label {
-                        HStack {
-                            Text(p.name)
-                            Spacer()
-                            Text(p.kind.rawValue.uppercased())
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                        }
-                    } icon: {
-                        Image(systemName: p.kind.symbol)
-                    }
-                    .tag(SidebarItem.profile(p.name))
-                    .contextMenu { ProfileQuickActions(profile: p) }
+                    SidebarRow(title: p.name, symbol: p.kind.symbol, color: Brand.color(for: p.kind),
+                               trailing: p.kind.rawValue.uppercased())
+                        .tag(SidebarItem.profile(p.name))
+                        .contextMenu { ProfileQuickActions(profile: p) }
                 }
             }
             Section("Další AI nástroje") {
                 ForEach(store.tools) { t in
-                    Label {
-                        HStack {
-                            Text(t.title)
-                            Spacer()
-                            if !t.profiles.isEmpty {
-                                Text("\(t.profiles.count)").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
-                            }
-                        }
-                    } icon: { Image(systemName: t.symbol) }
-                    .tag(SidebarItem.tool(t.id))
+                    SidebarRow(title: t.title, symbol: t.symbol, color: Brand.color(forTool: t.id),
+                               trailing: t.profiles.isEmpty ? nil : "\(t.profiles.count)")
+                        .tag(SidebarItem.tool(t.id))
                 }
             }
             Section("Nástroje") {
-                Label("Zálohy a přenos", systemImage: "externaldrive.badge.timemachine").tag(SidebarItem.backups)
-                Label("Migrace", systemImage: "arrow.left.arrow.right").tag(SidebarItem.migration)
-                Label("Projekty", systemImage: "folder").tag(SidebarItem.projects)
-                Label("Prostředí a diagnostika", systemImage: "stethoscope").tag(SidebarItem.environment)
-                Label {
-                    HStack {
-                        Text("Protokol činností")
-                        Spacer()
-                        if store.log.contains(where: { !$0.succeeded }) {
-                            Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
-                        }
-                    }
-                } icon: { Image(systemName: "list.bullet.rectangle") }
-                .tag(SidebarItem.activity)
+                SidebarRow(title: "Zálohy a přenos", symbol: "externaldrive.fill", color: Color(hex: 0x0891B2))
+                    .tag(SidebarItem.backups)
+                SidebarRow(title: "Migrace", symbol: "arrow.left.arrow.right", color: Brand.violet)
+                    .tag(SidebarItem.migration)
+                SidebarRow(title: "Projekty", symbol: "folder.fill", color: Color(hex: 0x2563EB))
+                    .tag(SidebarItem.projects)
+                SidebarRow(title: "Prostředí a diagnostika", symbol: "stethoscope", color: Color(hex: 0x059669))
+                    .tag(SidebarItem.environment)
+                SidebarRow(title: "Protokol činností", symbol: "list.bullet.rectangle.fill", color: Color(hex: 0x64748B),
+                           alert: store.log.contains(where: { !$0.succeeded }))
+                    .tag(SidebarItem.activity)
             }
         }
         .listStyle(.sidebar)
+        .safeAreaInset(edge: .top) {
+            HStack(spacing: 10) {
+                LogoView(size: 38)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Profile Manager").font(.headline)
+                    Text("verze \(AppInfo.version)").font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 14).padding(.top, 6).padding(.bottom, 4)
+        }
         .safeAreaInset(edge: .bottom) {
             VStack(alignment: .leading, spacing: 0) {
-            if store.pendingTransaction || store.pendingUpdate {
-                Button { store.selection = .environment } label: {
-                    Label(store.pendingTransaction ? "Přerušená transakce" : "Přerušená aktualizace",
-                          systemImage: "exclamationmark.triangle.fill")
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                if store.pendingTransaction || store.pendingUpdate {
+                    Button { store.selection = .environment } label: {
+                        Label(store.pendingTransaction ? "Přerušená transakce" : "Přerušená aktualizace",
+                              systemImage: "exclamationmark.triangle.fill")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(.orange)
+                    .padding(10)
                 }
-                .buttonStyle(.borderless)
-                .foregroundStyle(.orange)
-                .padding(10)
+                Text("Aplikace \(AppInfo.version) · správce \(store.doctor?.version ?? "…")")
+                    .font(.caption2).foregroundStyle(.tertiary)
+                    .padding(.horizontal, 14).padding(.bottom, 8)
             }
-            Text("Aplikace \(AppInfo.version) · správce \(store.doctor?.version ?? "…")")
-                .font(.caption2).foregroundStyle(.tertiary)
-                .padding(.horizontal, 14).padding(.bottom, 8)
+        }
+    }
+}
+
+struct SidebarRow: View {
+    let title: String
+    let symbol: String
+    let color: Color
+    var trailing: String? = nil
+    var alert = false
+
+    var body: some View {
+        Label {
+            HStack {
+                Text(title).lineLimit(1)
+                Spacer()
+                if alert {
+                    Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
+                } else if let trailing {
+                    Text(trailing).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                }
             }
+        } icon: {
+            BadgeIcon(symbol: symbol, color: color, size: 20)
         }
     }
 }
@@ -215,42 +232,54 @@ struct BannerView: View {
 struct Page<Content: View>: View {
     let title: String
     let subtitle: String?
+    var symbol: String? = nil
+    var tint: Color = Brand.accent
     @ViewBuilder var content: Content
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title).font(.largeTitle.weight(.semibold))
-                    if let subtitle { Text(subtitle).foregroundStyle(.secondary) }
+            VStack(alignment: .leading, spacing: 22) {
+                if !title.isEmpty {
+                HStack(alignment: .center, spacing: 14) {
+                    if let symbol { BadgeIcon(symbol: symbol, color: tint, size: 46) }
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(title).font(.system(size: 28, weight: .bold, design: .rounded))
+                        if let subtitle { Text(subtitle).foregroundStyle(.secondary) }
+                    }
+                }
                 }
                 content
             }
-            .padding(28)
-            .frame(maxWidth: 980, alignment: .leading)
+            .padding(.horizontal, 32).padding(.vertical, 28)
+            .frame(maxWidth: 1000, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 }
 
 struct Card<Content: View>: View {
     var title: String?
     var systemImage: String?
+    var tint: Color = Brand.accent
     @ViewBuilder var content: Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let title {
-                Label(title, systemImage: systemImage ?? "circle")
-                    .font(.headline)
-                    .labelStyle(.titleAndIcon)
+                HStack(spacing: 10) {
+                    BadgeIcon(symbol: systemImage ?? "circle", color: tint, size: 24)
+                    Text(title).font(.headline)
+                }
             }
             content
         }
-        .padding(16)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.primary.opacity(0.08)))
+        .background(Color(nsColor: .controlBackgroundColor),
+                    in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.primary.opacity(0.07)))
+        .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
     }
 }
 

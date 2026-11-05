@@ -19,7 +19,7 @@ struct ProfileDetailView: View {
     private var profileBackups: [BackupInfo] { store.backups.filter { $0.profile == profile.name } }
 
     var body: some View {
-        Page(title: profile.name, subtitle: profile.kind.title + (profile.readOnly ? " · pouze pro čtení" : "")) {
+        Page(title: profile.name, subtitle: profile.kind.title + (profile.readOnly ? " · pouze pro čtení" : ""), symbol: profile.kind.symbol, tint: Brand.color(for: profile.kind)) {
             HStack(spacing: 10) {
                 if profile.kind.hasCLI {
                     Button { store.launchCLI(profile.name) } label: {

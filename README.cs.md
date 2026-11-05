@@ -1,6 +1,8 @@
+<p align="center"><img src="docs/logo.png" width="128" alt="Claude Profile Manager"></p>
+
 # Claude Profile Manager pro macOS
 
-Samostatný správce profilů pro Claude Code CLI a Claude Desktop, verze 1.3.0. Přímé spuštění `claude-manager.py` otevře textovou administraci v terminálu; symlinky `claude-NAME` místo menu spustí skutečné Claude CLI s odpovídajícím `CLAUDE_CONFIG_DIR` a všemi původními argumenty.
+Samostatný správce profilů pro Claude Code CLI a Claude Desktop, verze 1.5.0. Přímé spuštění `claude-manager.py` otevře textovou administraci v terminálu; symlinky `claude-NAME` místo menu spustí skutečné Claude CLI s odpovídajícím `CLAUDE_CONFIG_DIR` a všemi původními argumenty.
 
 Balíček nic sám neinstaluje do tvého Macu. Instalace vyžaduje macOS, Python 3.9+ a existující Claude CLI/Claude.app; vlastní správce používá pouze standardní knihovnu Pythonu a pro práci s GUI Git registry také systémový `git`.
 
@@ -29,6 +31,7 @@ Stejným způsobem lze oddělovat profily dalších AI asistentů pro programov�
 | Google Gemini CLI | `GEMINI_CLI_HOME` (uvnitř `.gemini`) | Přihlášení Google účtem může být ve sdílené klíčence; API klíče jsou oddělené. |
 | GitHub Copilot CLI | `COPILOT_HOME`, `COPILOT_CACHE_HOME` | Token je v klíčence podle účtu; v každém profilu použij `/login`. `GH_TOKEN` apod. se odstraňují. |
 | opencode | `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_STATE_HOME`, `XDG_CACHE_HOME` | Ověřeno `opencode debug paths`; XDG zdědí i podprocesy. |
+| xAI Grok Build CLI | `GROK_HOME` (+ `GROK_DISABLE_AUTOUPDATER=1` mimo `~/.grok`) | Přihlášení v `auth.json` profilu (ověřeno s grok 1.0.70). Program se hledá nejprve v `~/.grok/bin/grok`; `brew install grok` je jiný nástroj. |
 
 ```bash
 "$CM" tool-create codex pracovni --yes

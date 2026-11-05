@@ -12,8 +12,9 @@ struct BackupsView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top) {
+                BadgeIcon(symbol: "externaldrive.fill", color: Color(hex: 0x0891B2), size: 46)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Zálohy a přenos").font(.largeTitle.weight(.semibold))
+                    Text("Zálohy a přenos").font(.system(size: 28, weight: .bold, design: .rounded))
                     Text("Ověřené souborové snapshoty v INSTALL_DIR/backups. Plná záloha obsahuje i souborová přihlášení – není šifrovaná.")
                         .foregroundStyle(.secondary)
                 }

@@ -53,7 +53,7 @@ struct MigrationView: View {
     }
 
     var body: some View {
-        Page(title: "Migrace", subtitle: "Přenos vybraných komponent mezi profily nebo ze zálohy. Vždy nejprve zkouška nanečisto.") {
+        Page(title: "Migrace", subtitle: "Přenos vybraných komponent mezi profily nebo ze zálohy. Vždy nejprve zkouška nanečisto.", symbol: "arrow.left.arrow.right", tint: Brand.violet) {
             StepsView(current: dryRunOK == baseArgs ? 2 : 1)
 
             Card(title: "Zdroj a cíl", systemImage: "arrow.left.arrow.right") {

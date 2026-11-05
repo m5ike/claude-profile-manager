@@ -13,8 +13,10 @@ enum Snapshotter {
     static func run(store: Store) async {
         guard let dir = directory else { return }
         try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
-        if UserDefaults.standard.string(forKey: "snapshotAppearance") == "light" {
-            NSApp.appearance = NSAppearance(named: .aqua)
+        switch UserDefaults.standard.string(forKey: "snapshotAppearance") {
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        default: break
         }
         try? await Task.sleep(nanoseconds: 1_500_000_000)
         guard let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }) else { return }
@@ -26,7 +28,7 @@ enum Snapshotter {
         let first = store.config.profiles.first(where: { $0.kind == .both })?.name ?? store.config.profiles.first?.name
         var steps: [(String, SidebarItem)] = [("01-prehled", .overview)]
         if let first { steps.append(("02-profil", .profile(first))) }
-        steps += [("09-codex", .tool("codex")), ("10-opencode", .tool("opencode"))]
+        steps += [("09-codex", .tool("codex")), ("10-opencode", .tool("opencode")), ("12-grok", .tool("grok"))]
         steps += [("04-zalohy", .backups), ("05-migrace", .migration), ("06-projekty", .projects),
                   ("07-prostredi", .environment), ("08-protokol", .activity)]
 

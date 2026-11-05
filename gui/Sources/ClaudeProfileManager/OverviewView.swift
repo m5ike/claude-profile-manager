@@ -4,10 +4,16 @@ import SwiftUI
 struct OverviewView: View {
     @EnvironmentObject var store: Store
 
+    private var toolProfiles: Int { store.tools.reduce(0) { $0 + $1.profiles.count } }
+
     var body: some View {
-        Page(title: "Přehled", subtitle: "Oddělené profily Claude Code, Claude Desktop, Codex, Gemini, Copilot a opencode na jednom Macu") {
+        Page(title: "", subtitle: nil) {
+            HeroHeader(claudeProfiles: store.config.profiles.count, toolProfiles: toolProfiles,
+                       backups: store.backups.filter { !$0.isImport }.count + store.toolBackups.count,
+                       healthy: store.doctor?.issues.isEmpty ?? true)
+
             if store.pendingTransaction || store.pendingUpdate {
-                Card(title: "Vyžaduje pozornost", systemImage: "exclamationmark.triangle.fill") {
+                Card(title: "Vyžaduje pozornost", systemImage: "exclamationmark.triangle.fill", tint: .orange) {
                     Text(store.pendingTransaction
                          ? "Byla nalezena přerušená transakce. Zápisy a spouštěče jsou zablokovány, dokud neproběhne obnova."
                          : "Byla nalezena přerušená aktualizace. Spusťte z nového balíčku: update.sh INSTALL_DIR --recover --yes")
@@ -17,29 +23,14 @@ struct OverviewView: View {
                     }
                 }
             }
-
             if let d = store.doctor, d.version != AppInfo.version, AppInfo.version != "vývojová" {
-                Card(title: "Rozdílné verze", systemImage: "arrow.triangle.2.circlepath") {
+                Card(title: "Rozdílné verze", systemImage: "arrow.triangle.2.circlepath", tint: .orange) {
                     Text("Aplikace má verzi \(AppInfo.version), ale claude-manager.py v INSTALL_DIR má verzi \(d.version). Aktualizujte instalaci příkazem update.sh, nebo sestavte aplikaci ze stejného balíčku.")
                         .foregroundStyle(.secondary)
                 }
             }
-
-            HStack(spacing: 14) {
-                StatTile(value: "\(store.config.profiles.count)", label: "Profily Claude", symbol: "person.2")
-                StatTile(value: "\(store.tools.reduce(0) { $0 + $1.profiles.count })", label: "Další CLI",
-                         symbol: "square.stack.3d.up")
-                StatTile(value: "\(store.backups.filter { !$0.isImport }.count)", label: "Zálohy",
-                         symbol: "externaldrive")
-                StatTile(value: store.doctor.map { $0.issues.isEmpty ? "OK" : "\($0.issues.count)" } ?? "…",
-                         label: store.doctor?.issues.isEmpty ?? true ? "Diagnostika" : "Problémy",
-                         symbol: "stethoscope",
-                         tint: (store.doctor?.issues.isEmpty ?? true) ? .green : .orange)
-                StatTile(value: store.doctor?.version ?? "…", label: "Verze správce", symbol: "shippingbox")
-            }
-
             if let d = store.doctor, !d.issues.isEmpty {
-                Card(title: "Zjištěné problémy", systemImage: "exclamationmark.bubble") {
+                Card(title: "Zjištěné problémy", systemImage: "stethoscope", tint: .orange) {
                     ForEach(d.issues, id: \.self) { issue in
                         Label(issue, systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
                     }
@@ -47,22 +38,138 @@ struct OverviewView: View {
                 }
             }
 
-            HStack {
-                Text("Profily").font(.title2.weight(.semibold))
-                Spacer()
+            SectionTitle(title: "Profily Claude", detail: "Claude Code CLI a Claude Desktop") {
                 Button { store.showRegister = true } label: { Label("Zaregistrovat existující", systemImage: "tray.and.arrow.down") }
                 Button { store.showNewProfile = true } label: { Label("Nový profil", systemImage: "plus") }
                     .buttonStyle(.borderedProminent)
             }
-
             if store.config.profiles.isEmpty {
                 EmptyProfilesView()
             } else {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 270), spacing: 14)], spacing: 14) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: 16)], spacing: 16) {
                     ForEach(store.config.profiles) { ProfileCard(profile: $0) }
                 }
             }
+
+            SectionTitle(title: "Další AI nástroje", detail: "Codex, Gemini, Copilot, opencode a Grok") { EmptyView() }
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 5), spacing: 12) {
+                ForEach(store.tools) { ToolSummaryCard(tool: $0) }
+            }
         }
+    }
+}
+
+/// Gradient banner with the logo and the key numbers.
+struct HeroHeader: View {
+    let claudeProfiles: Int
+    let toolProfiles: Int
+    let backups: Int
+    let healthy: Bool
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 22) {
+            LogoView(size: 96)
+                .shadow(color: .black.opacity(0.25), radius: 10, y: 4)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Claude Profile Manager")
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                Text("Oddělené účty, konfigurace a historie pro Claude Code, Claude Desktop a další AI nástroje na jednom Macu.")
+                    .font(.callout).opacity(0.88)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 8) {
+                    HeroStat(value: "\(claudeProfiles)", label: "Claude")
+                    HeroStat(value: "\(toolProfiles)", label: "další CLI")
+                    HeroStat(value: "\(backups)", label: "záloh")
+                    HeroStat(value: healthy ? "OK" : "!", label: "diagnostika")
+                    HeroStat(value: AppInfo.version, label: "verze")
+                }
+                .padding(.top, 4)
+            }
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(.white)
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            ZStack(alignment: .topTrailing) {
+                Brand.heroGradient
+                Circle().fill(.white.opacity(0.08)).frame(width: 260, height: 260).offset(x: 90, y: -120)
+                Circle().fill(.white.opacity(0.06)).frame(width: 160, height: 160).offset(x: -40, y: 110)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: Brand.accent.opacity(0.25), radius: 14, y: 6)
+    }
+}
+
+struct HeroStat: View {
+    let value: String
+    let label: String
+    var body: some View {
+        HStack(spacing: 5) {
+            Text(value).font(.callout.weight(.bold)).monospacedDigit()
+            Text(label).font(.caption).opacity(0.8)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(.white.opacity(0.16), in: Capsule())
+    }
+}
+
+struct SectionTitle<Actions: View>: View {
+    let title: String
+    var detail: String?
+    @ViewBuilder var actions: Actions
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title).font(.title2.weight(.bold))
+            if let detail { Text(detail).foregroundStyle(.secondary) }
+            Spacer()
+            actions
+        }
+        .padding(.top, 6)
+    }
+}
+
+/// Clickable tile per AI tool on the overview.
+struct ToolSummaryCard: View {
+    @EnvironmentObject var store: Store
+    let tool: ToolInfo
+
+    private var count: String {
+        switch tool.profiles.count {
+        case 0: return "Bez profilů"
+        case 1: return "1 profil"
+        case 2...4: return "\(tool.profiles.count) profily"
+        default: return "\(tool.profiles.count) profilů"
+        }
+    }
+
+    var body: some View {
+        Button { store.selection = .tool(tool.id) } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    BadgeIcon(symbol: tool.symbol, color: Brand.color(forTool: tool.id), size: 34)
+                    Spacer()
+                    Image(systemName: tool.binary == nil ? "exclamationmark.circle" : "checkmark.circle.fill")
+                        .foregroundStyle(tool.binary == nil ? .orange : .green)
+                        .help(tool.binary == nil ? "Program nebyl nalezen" : "Program nalezen")
+                }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(tool.shortName).font(.headline).foregroundStyle(.primary).lineLimit(1)
+                    Text(tool.vendor).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                }
+                Pill(text: count, color: tool.profiles.isEmpty ? .secondary : Brand.color(forTool: tool.id))
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(nsColor: .controlBackgroundColor),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.primary.opacity(0.07)))
+            .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
+            .contentShape(Rectangle())
+            .help(tool.title)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -95,10 +202,7 @@ struct ProfileCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Image(systemName: profile.kind.symbol)
-                    .font(.title2).foregroundStyle(.tint)
-                    .frame(width: 38, height: 38)
-                    .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                BadgeIcon(symbol: profile.kind.symbol, color: Brand.color(for: profile.kind), size: 40)
                 VStack(alignment: .leading) {
                     Text(profile.name).font(.headline)
                     Text(profile.kind.title).font(.caption).foregroundStyle(.secondary)
@@ -128,10 +232,12 @@ struct ProfileCard: View {
             }
             .controlSize(.small)
         }
-        .padding(14)
+        .padding(16)
         .frame(minHeight: 168, alignment: .top)
-        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.primary.opacity(0.08)))
+        .background(Color(nsColor: .controlBackgroundColor),
+                    in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.primary.opacity(0.07)))
+        .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { store.selection = .profile(profile.name) }
     }
@@ -162,7 +268,7 @@ struct SetupView: View {
 
     var body: some View {
         VStack(spacing: 18) {
-            Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 96, height: 96)
+            LogoView(size: 110)
             Text("Vítejte v Claude Profile Manageru").font(.largeTitle.weight(.semibold))
             Text("Aplikace je grafickým rozhraním pro skript claude-manager.py. Vyberte jeho instalaci (INSTALL_DIR), ve které jsou uložené registry profilů, spouštěče a zálohy.")
                 .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 520)

@@ -19,7 +19,7 @@ struct ToolView: View {
     private var backups: [ToolBackupInfo] { store.toolBackups.filter { $0.tool == tool.id } }
 
     var body: some View {
-        Page(title: tool.title, subtitle: "Oddělené profily se samostatnou konfigurací, historií a přihlášením.") {
+        Page(title: tool.title, subtitle: "Oddělené profily se samostatnou konfigurací, historií a přihlášením.", symbol: tool.symbol, tint: Brand.color(forTool: tool.id)) {
             HStack {
                 Button { showNew = true } label: { Label("Nový profil", systemImage: "plus") }
                     .buttonStyle(.borderedProminent)
@@ -36,13 +36,13 @@ struct ToolView: View {
                 Link(destination: tool.docsURL) { Label("Dokumentace výrobce", systemImage: "book") }
             }
 
-            Card(title: "Jak funguje oddělení", systemImage: "square.split.2x2") {
+            Card(title: "Jak funguje oddělení", systemImage: "square.split.2x2", tint: Brand.color(forTool: tool.id)) {
                 Text(tool.isolationNote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 Text("Ve výchozím stavu se před spuštěním odstraní: " + tool.authEnv.joined(separator: ", "))
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Card(title: "Spustitelný soubor", systemImage: "terminal") {
+            Card(title: "Spustitelný soubor", systemImage: "terminal", tint: Brand.color(forTool: tool.id)) {
                 if let b = tool.binary {
                     Label("Používá se: \(b.tildePath)", systemImage: "checkmark.circle").foregroundStyle(.green)
                 } else {
@@ -73,7 +73,7 @@ struct ToolView: View {
             }
             ForEach(tool.profiles) { p in profileCard(p) }
 
-            Card(title: "Zálohy a přenos", systemImage: "externaldrive.badge.timemachine") {
+            Card(title: "Zálohy a přenos", systemImage: "externaldrive.fill", tint: Brand.color(forTool: tool.id)) {
                 HStack {
                     Text("Exportovaný archiv přenesete na jiný Mac, tam ho importujte a použijte „Migrovat…“.")
                         .font(.caption).foregroundStyle(.secondary)
@@ -174,7 +174,7 @@ struct ToolView: View {
     }
 
     @ViewBuilder private func profileCard(_ p: ToolProfile) -> some View {
-        Card(title: p.name, systemImage: tool.symbol) {
+        Card(title: p.name, systemImage: tool.symbol, tint: Brand.color(forTool: tool.id)) {
             PathRow(label: p.registered ? "Kořen (registrovaný)" : "Kořen profilu", path: p.root)
             PathRow(label: "Spouštěč", path: p.launcher)
             VStack(alignment: .leading, spacing: 2) {
@@ -233,6 +233,7 @@ struct ToolProfileSheet: View {
         switch tool.id {
         case "codex": return NSHomeDirectory() + "/.codex"
         case "copilot": return NSHomeDirectory() + "/.copilot"
+        case "grok": return NSHomeDirectory() + "/.grok"
         default: return nil
         }
     }

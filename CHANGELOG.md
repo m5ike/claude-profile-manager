@@ -1,5 +1,38 @@
 # Historie verzí
 
+## 1.5.0 – 2026-11-05
+
+### Přidáno
+- **Logo a ikona aplikace** – vektorový zdroj `gui/Resources/Logo.svg` (vrstvené karty profilů
+  s terminálem na indigovém podkladu); `build-app.sh` z něj generuje `AppIcon.icns`, PNG je v `docs/logo.png`.
+- **Nový vzhled aplikace** – sdílený design systém (`Theme.swift`): značková paleta, barevné odznaky pro
+  typy profilů a jednotlivé nástroje, postranní panel s logem a verzí, hlavička přehledu se souhrnem,
+  dlaždice dalších AI nástrojů, jednotné karty a záhlaví obrazovek, ověřený světlý i tmavý režim.
+- Snapshot režim umí `-snapshotAppearance dark`.
+
+### Změněno
+- Příručka v novém vizuálním stylu (indigová barva, nové logo na titulní straně) s oddílem o vzhledu
+  a tmavém režimu; aktualizované snímky obrazovky.
+
+## 1.4.0 – 2026-11-05
+
+### Přidáno
+- **xAI Grok Build CLI** (`grok`) jako pátý podporovaný nástroj: `tool-create/register/run/launchers/
+  backup/restore/migrate/export/import grok …`, spouštěče `grok-NAZEV`, sekce v grafické aplikaci.
+- Profil přes `GROK_HOME`; mimo původní `~/.grok` navíc `GROK_DISABLE_AUTOUPDATER=1`, aby si profily
+  nestahovaly vlastní kopie programu. Ve výchozím stavu se odstraní `XAI_API_KEY`, `GROK_AUTH_*`,
+  `GROK_OIDC_*`, `GROK_DEPLOYMENT_KEY` a `GROK_XAI_API_BASE_URL`.
+- Hledání programu nejprve v `~/.grok/bin/grok` (oficiální instalátor), protože `brew install grok`
+  je nesouvisející nástroj.
+- Třídy migrace pro Grok (přihlášení `auth.json`, `agent_id`, `trusted_folders.toml`, `hooks-paths`;
+  historie `sessions`, `memory*`; instalace programu a cache se nekopírují). Soubory `*.lock` jsou
+  u všech nástrojů dočasné.
+- End-to-end test se skutečným `grok` (spouští se, pokud je nainstalovaný).
+
+### Ověřeno
+- docs.x.ai/build/settings/reference a uživatelská příručka xai-org/grok-build (GROK_HOME, auth.json,
+  proměnné prostředí); grok 1.0.70: nový `GROK_HOME` je odhlášený a původní `~/.grok/auth.json` zůstává beze změny.
+
 ## 1.3.0 – 2026-11-05
 
 ### Přidáno

@@ -18,6 +18,7 @@ struct ClaudeProfileManagerApp: App {
         WindowGroup("Claude Profile Manager") {
             ContentView()
                 .environmentObject(store)
+                .tint(Brand.accent)
                 .frame(minWidth: 980, minHeight: 640)
         }
         .windowToolbarStyle(.unified)
@@ -25,7 +26,7 @@ struct ClaudeProfileManagerApp: App {
             CommandGroup(replacing: .appInfo) {
                 Button("O aplikaci Claude Profile Manager") {
                     let credits = NSAttributedString(
-                        string: "Správce oddělených profilů Claude Code, Claude Desktop, Codex CLI, Gemini CLI, Copilot CLI a opencode.\nBackend claude-manager.py \(store.doctor?.version ?? "?")",
+                        string: "Správce oddělených profilů Claude Code, Claude Desktop, Codex CLI, Gemini CLI, Copilot CLI, opencode a Grok Build CLI.\nBackend claude-manager.py \(store.doctor?.version ?? "?")",
                         attributes: [.font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.secondaryLabelColor])
                     NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
                 }
