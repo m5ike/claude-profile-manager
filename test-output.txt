@@ -1,0 +1,242 @@
+
+=== COMPLETE TEST PASS 1/2 ===
+test_backup_verify (test_manager.Backups.test_backup_verify) ... ok
+test_corrupt_backup_refused (test_manager.Backups.test_corrupt_backup_refused) ... ok
+test_cross_profile_restore_refused (test_manager.Backups.test_cross_profile_restore_refused) ... ok
+test_default_adjacent_state_backup_restore (test_manager.Backups.test_default_adjacent_state_backup_restore) ... ok
+test_exact_restore_and_prebackup (test_manager.Backups.test_exact_restore_and_prebackup) ... ok
+test_export_external_link_refused (test_manager.Backups.test_export_external_link_refused) ... ok
+test_export_round_trip (test_manager.Backups.test_export_round_trip) ... ok
+test_external_symlink_and_hardlink (test_manager.Backups.test_external_symlink_and_hardlink) ... ok
+test_extraction_limits (test_manager.Backups.test_extraction_limits) ... ok
+test_import_checksum (test_manager.Backups.test_import_checksum) ... ok
+test_internal_symlink_roundtrip (test_manager.Backups.test_internal_symlink_roundtrip) ... ok
+test_portable_export_rebases_absolute_internal_links (test_manager.Backups.test_portable_export_rebases_absolute_internal_links) ... ok
+test_restore_absence_of_default_adjacent_state (test_manager.Backups.test_restore_absence_of_default_adjacent_state) ... ok
+test_socket_refused (test_manager.Backups.test_socket_refused) ... ok
+test_traversal_and_absolute_archive (test_manager.Backups.test_traversal_and_absolute_archive) ... ok
+test_unknown_file_in_backup (test_manager.Backups.test_unknown_file_in_backup) ... ok
+test_all_three_streams_remain_tty (test_manager.EndToEnd.test_all_three_streams_remain_tty) ... ok
+test_direct_without_tty_fails_cleanly (test_manager.EndToEnd.test_direct_without_tty_fails_cleanly) ... ok
+test_exec_retains_profile_lock_until_real_cli_exits (test_manager.EndToEnd.test_exec_retains_profile_lock_until_real_cli_exits) ... ok
+test_symlink_exec_streams_arguments_exit_and_auth (test_manager.EndToEnd.test_symlink_exec_streams_arguments_exit_and_auth) ... ok
+test_backup_as_source_does_not_change_backup (test_manager.Migration.test_backup_as_source_does_not_change_backup) ... ok
+test_backup_default_mcp_portable (test_manager.Migration.test_backup_default_mcp_portable) ... ok
+test_cli_credentials_only_explicit (test_manager.Migration.test_cli_credentials_only_explicit) ... ok
+test_conflict_aborts_both_scopes (test_manager.Migration.test_conflict_aborts_both_scopes) ... ok
+test_divergent_transcripts_no_silent_merge (test_manager.Migration.test_divergent_transcripts_no_silent_merge) ... ok
+test_dry_run_unchanged (test_manager.Migration.test_dry_run_unchanged) ... ok
+test_explicit_keep_replace (test_manager.Migration.test_explicit_keep_replace) ... ok
+test_gui_missing_or_ambiguous_index_refused (test_manager.Migration.test_gui_missing_or_ambiguous_index_refused) ... ok
+test_gui_permissions_reset_and_target_auth_preserved (test_manager.Migration.test_gui_permissions_reset_and_target_auth_preserved) ... ok
+test_gui_requires_real_shared_transcript_when_id_present (test_manager.Migration.test_gui_requires_real_shared_transcript_when_id_present) ... ok
+test_gui_scratch_staged_before_commit (test_manager.Migration.test_gui_scratch_staged_before_commit) ... ok
+test_gui_settings_no_epitaxy_or_routines (test_manager.Migration.test_gui_settings_no_epitaxy_or_routines) ... ok
+test_gui_worktree_refused (test_manager.Migration.test_gui_worktree_refused) ... ok
+test_mcp_only_not_account (test_manager.Migration.test_mcp_only_not_account) ... ok
+test_migrate_only_selected (test_manager.Migration.test_migrate_only_selected) ... ok
+test_real_scratch_workspaces_directory (test_manager.Migration.test_real_scratch_workspaces_directory) ... ok
+test_rebase_plugins_and_history (test_manager.Migration.test_rebase_plugins_and_history) ... ok
+test_symlink_subtree_not_followed (test_manager.Migration.test_symlink_subtree_not_followed) ... ok
+test_target_default_adjacent_state (test_manager.Migration.test_target_default_adjacent_state) ... ok
+test_unknown_worktree_registry_refused (test_manager.Migration.test_unknown_worktree_registry_refused) ... ok
+test_valid_worktree_registry_migrates_without_git_mutation (test_manager.Migration.test_valid_worktree_registry_migrates_without_git_mutation) ... ok
+test_writer_appears_before_commit (test_manager.Migration.test_writer_appears_before_commit) ... ok
+test_defaults (test_manager.Profiles.test_defaults) ... ok
+test_existing_not_overwritten (test_manager.Profiles.test_existing_not_overwritten) ... ok
+test_invalid_names (test_manager.Profiles.test_invalid_names) ... ok
+test_managed_backup_root_refused (test_manager.Profiles.test_managed_backup_root_refused) ... ok
+test_manager_named_profile_has_independent_lock (test_manager.Profiles.test_manager_named_profile_has_independent_lock) ... ok
+test_no_overlapping_roots (test_manager.Profiles.test_no_overlapping_roots) ... ok
+test_symlink_lock_directory_refused (test_manager.Profiles.test_symlink_lock_directory_refused) ... ok
+test_symlink_root_refused (test_manager.Profiles.test_symlink_root_refused) ... ok
+test_unknown_schema (test_manager.Profiles.test_unknown_schema) ... ok
+test_absolute_internal_project_link_rebased (test_manager.ProjectsAndLaunchers.test_absolute_internal_project_link_rebased) ... ok
+test_bundle_identifiers_do_not_collide (test_manager.ProjectsAndLaunchers.test_bundle_identifiers_do_not_collide) ... ok
+test_external_project_symlink_refused (test_manager.ProjectsAndLaunchers.test_external_project_symlink_refused) ... ok
+test_git_alternates_refused (test_manager.ProjectsAndLaunchers.test_git_alternates_refused) ... ok
+test_gui_duplicate_returns_without_open (test_manager.ProjectsAndLaunchers.test_gui_duplicate_returns_without_open) ... ok
+test_gui_open_command_and_confirmation (test_manager.ProjectsAndLaunchers.test_gui_open_command_and_confirmation) ... ok
+test_gui_other_profile_refused (test_manager.ProjectsAndLaunchers.test_gui_other_profile_refused) ... ok
+test_launchers_and_plist (test_manager.ProjectsAndLaunchers.test_launchers_and_plist) ... ok
+test_linked_worktree_refused (test_manager.ProjectsAndLaunchers.test_linked_worktree_refused) ... ok
+test_nested_submodule_pointer_refused (test_manager.ProjectsAndLaunchers.test_nested_submodule_pointer_refused) ... ok
+test_no_unowned_launcher_overwrite (test_manager.ProjectsAndLaunchers.test_no_unowned_launcher_overwrite) ... ok
+test_path_idempotent_and_quoted (test_manager.ProjectsAndLaunchers.test_path_idempotent_and_quoted) ... ok
+test_project_copy_with_dirty_files (test_manager.ProjectsAndLaunchers.test_project_copy_with_dirty_files) ... ok
+test_recursive_binary_refused (test_manager.ProjectsAndLaunchers.test_recursive_binary_refused) ... ok
+test_registered_worktrees_refused_for_project_copy (test_manager.ProjectsAndLaunchers.test_registered_worktrees_refused_for_project_copy) ... ok
+test_settings_edit_validates_and_backs_up (test_manager.ProjectsAndLaunchers.test_settings_edit_validates_and_backs_up) ... ok
+test_settings_editor_invalid_json_preserves_original (test_manager.ProjectsAndLaunchers.test_settings_editor_invalid_json_preserves_original) ... ok
+test_shell_rc_backup (test_manager.ProjectsAndLaunchers.test_shell_rc_backup) ... ok
+test_busy_profile_lock (test_manager.Transactions.test_busy_profile_lock) ... ok
+test_committed_recovery_does_not_rollback (test_manager.Transactions.test_committed_recovery_does_not_rollback) ... ok
+test_pending_blocks_new_operation (test_manager.Transactions.test_pending_blocks_new_operation) ... ok
+test_recover_after_installed_new_tree (test_manager.Transactions.test_recover_after_installed_new_tree) ... ok
+test_rollback_after_second_rename_failure (test_manager.Transactions.test_rollback_after_second_rename_failure) ... ok
+test_running_writer_refused (test_manager.Transactions.test_running_writer_refused) ... ok
+test_unsafe_journal_refused (test_manager.Transactions.test_unsafe_journal_refused) ... ok
+test_cli_only_backup_both_means_enabled_cli (test_update.ProfileTypes.test_cli_only_backup_both_means_enabled_cli) ... ok
+test_cli_only_creates_no_gui_root_or_launcher (test_update.ProfileTypes.test_cli_only_creates_no_gui_root_or_launcher) ... ok
+test_data_operation_still_checks_processes (test_update.ProfileTypes.test_data_operation_still_checks_processes) ... ok
+test_disabled_type_has_clear_error (test_update.ProfileTypes.test_disabled_type_has_clear_error) ... ok
+test_gui_only_backup_restore (test_update.ProfileTypes.test_gui_only_backup_restore) ... ok
+test_gui_only_creates_no_cli_root_or_launcher (test_update.ProfileTypes.test_gui_only_creates_no_cli_root_or_launcher) ... ok
+test_gui_only_doctor_does_not_require_cli_binary (test_update.ProfileTypes.test_gui_only_doctor_does_not_require_cli_binary) ... ok
+test_gui_only_launch_does_not_inherit_cli_config (test_update.ProfileTypes.test_gui_only_launch_does_not_inherit_cli_config) ... ok
+test_gui_only_launch_ignores_unrelated_cli_process (test_update.ProfileTypes.test_gui_only_launch_ignores_unrelated_cli_process) ... ok
+test_gui_only_launchers_do_not_depend_on_shell_rc (test_update.ProfileTypes.test_gui_only_launchers_do_not_depend_on_shell_rc) ... ok
+test_import_both_backup_into_cli_only (test_update.ProfileTypes.test_import_both_backup_into_cli_only) ... ok
+test_metadata_launchers_dont_block_active_cli_lock (test_update.ProfileTypes.test_metadata_launchers_dont_block_active_cli_lock) ... ok
+test_migrate_cli_only_default_scope (test_update.ProfileTypes.test_migrate_cli_only_default_scope) ... ok
+test_migrate_gui_only_settings (test_update.ProfileTypes.test_migrate_gui_only_settings) ... ok
+test_migrate_mixed_types_needs_explicit_scope (test_update.ProfileTypes.test_migrate_mixed_types_needs_explicit_scope) ... ok
+test_no_process_scan_during_cli_launch (test_update.ProfileTypes.test_no_process_scan_during_cli_launch) ... ok
+test_old_registry_without_kind_is_both (test_update.ProfileTypes.test_old_registry_without_kind_is_both) ... ok
+test_set_type_preserves_and_reenables_old_data (test_update.ProfileTypes.test_set_type_preserves_and_reenables_old_data) ... ok
+test_busy_cli_lock_refuses_update (test_update.UpdaterTests.test_busy_cli_lock_refuses_update) ... ok
+test_committed_update_recovery_keeps_new_files (test_update.UpdaterTests.test_committed_update_recovery_keeps_new_files) ... ok
+test_corrupt_candidate_refused_before_import (test_update.UpdaterTests.test_corrupt_candidate_refused_before_import) ... ok
+test_failed_launcher_regeneration_rolls_back_scripts_and_shell (test_update.UpdaterTests.test_failed_launcher_regeneration_rolls_back_scripts_and_shell) ... ok
+test_idempotent_repeated_update (test_update.UpdaterTests.test_idempotent_repeated_update) ... ok
+test_missing_yes_changes_nothing (test_update.UpdaterTests.test_missing_yes_changes_nothing) ... ok
+test_old_both_registry_and_owned_gui_launcher_upgrade (test_update.UpdaterTests.test_old_both_registry_and_owned_gui_launcher_upgrade) ... ok
+test_old_root_only_removes_owned_old_block (test_update.UpdaterTests.test_old_root_only_removes_owned_old_block) ... ok
+test_other_payload_corruption_refused (test_update.UpdaterTests.test_other_payload_corruption_refused) ... ok
+test_partial_shell_block_refuses_before_changes (test_update.UpdaterTests.test_partial_shell_block_refuses_before_changes) ... ok
+test_recovery_of_interrupted_update (test_update.UpdaterTests.test_recovery_of_interrupted_update) ... ok
+test_shell_symlink_refused_no_overwrite (test_update.UpdaterTests.test_shell_symlink_refused_no_overwrite) ... ok
+test_skip_shell_respects_symlink (test_update.UpdaterTests.test_skip_shell_respects_symlink) ... ok
+test_update_journal_blocks_launch_but_recovery_can_acquire_lock (test_update.UpdaterTests.test_update_journal_blocks_launch_but_recovery_can_acquire_lock) ... ok
+test_update_repairs_shell_and_preserves_registry_and_data (test_update.UpdaterTests.test_update_repairs_shell_and_preserves_registry_and_data) ... ok
+
+----------------------------------------------------------------------
+Ran 109 tests in 3.635s
+
+OK
+Claude alpha is already running (PID 888).
+Started Claude alpha (PID 777).
+Started Claude single (PID 777).
+Started Claude single (PID 777).
+
+=== COMPLETE TEST PASS 2/2 ===
+test_backup_verify (test_manager.Backups.test_backup_verify) ... ok
+test_corrupt_backup_refused (test_manager.Backups.test_corrupt_backup_refused) ... ok
+test_cross_profile_restore_refused (test_manager.Backups.test_cross_profile_restore_refused) ... ok
+test_default_adjacent_state_backup_restore (test_manager.Backups.test_default_adjacent_state_backup_restore) ... ok
+test_exact_restore_and_prebackup (test_manager.Backups.test_exact_restore_and_prebackup) ... ok
+test_export_external_link_refused (test_manager.Backups.test_export_external_link_refused) ... ok
+test_export_round_trip (test_manager.Backups.test_export_round_trip) ... ok
+test_external_symlink_and_hardlink (test_manager.Backups.test_external_symlink_and_hardlink) ... ok
+test_extraction_limits (test_manager.Backups.test_extraction_limits) ... ok
+test_import_checksum (test_manager.Backups.test_import_checksum) ... ok
+test_internal_symlink_roundtrip (test_manager.Backups.test_internal_symlink_roundtrip) ... ok
+test_portable_export_rebases_absolute_internal_links (test_manager.Backups.test_portable_export_rebases_absolute_internal_links) ... ok
+test_restore_absence_of_default_adjacent_state (test_manager.Backups.test_restore_absence_of_default_adjacent_state) ... ok
+test_socket_refused (test_manager.Backups.test_socket_refused) ... ok
+test_traversal_and_absolute_archive (test_manager.Backups.test_traversal_and_absolute_archive) ... ok
+test_unknown_file_in_backup (test_manager.Backups.test_unknown_file_in_backup) ... ok
+test_all_three_streams_remain_tty (test_manager.EndToEnd.test_all_three_streams_remain_tty) ... ok
+test_direct_without_tty_fails_cleanly (test_manager.EndToEnd.test_direct_without_tty_fails_cleanly) ... ok
+test_exec_retains_profile_lock_until_real_cli_exits (test_manager.EndToEnd.test_exec_retains_profile_lock_until_real_cli_exits) ... ok
+test_symlink_exec_streams_arguments_exit_and_auth (test_manager.EndToEnd.test_symlink_exec_streams_arguments_exit_and_auth) ... ok
+test_backup_as_source_does_not_change_backup (test_manager.Migration.test_backup_as_source_does_not_change_backup) ... ok
+test_backup_default_mcp_portable (test_manager.Migration.test_backup_default_mcp_portable) ... ok
+test_cli_credentials_only_explicit (test_manager.Migration.test_cli_credentials_only_explicit) ... ok
+test_conflict_aborts_both_scopes (test_manager.Migration.test_conflict_aborts_both_scopes) ... ok
+test_divergent_transcripts_no_silent_merge (test_manager.Migration.test_divergent_transcripts_no_silent_merge) ... ok
+test_dry_run_unchanged (test_manager.Migration.test_dry_run_unchanged) ... ok
+test_explicit_keep_replace (test_manager.Migration.test_explicit_keep_replace) ... ok
+test_gui_missing_or_ambiguous_index_refused (test_manager.Migration.test_gui_missing_or_ambiguous_index_refused) ... ok
+test_gui_permissions_reset_and_target_auth_preserved (test_manager.Migration.test_gui_permissions_reset_and_target_auth_preserved) ... ok
+test_gui_requires_real_shared_transcript_when_id_present (test_manager.Migration.test_gui_requires_real_shared_transcript_when_id_present) ... ok
+test_gui_scratch_staged_before_commit (test_manager.Migration.test_gui_scratch_staged_before_commit) ... ok
+test_gui_settings_no_epitaxy_or_routines (test_manager.Migration.test_gui_settings_no_epitaxy_or_routines) ... ok
+test_gui_worktree_refused (test_manager.Migration.test_gui_worktree_refused) ... ok
+test_mcp_only_not_account (test_manager.Migration.test_mcp_only_not_account) ... ok
+test_migrate_only_selected (test_manager.Migration.test_migrate_only_selected) ... ok
+test_real_scratch_workspaces_directory (test_manager.Migration.test_real_scratch_workspaces_directory) ... ok
+test_rebase_plugins_and_history (test_manager.Migration.test_rebase_plugins_and_history) ... ok
+test_symlink_subtree_not_followed (test_manager.Migration.test_symlink_subtree_not_followed) ... ok
+test_target_default_adjacent_state (test_manager.Migration.test_target_default_adjacent_state) ... ok
+test_unknown_worktree_registry_refused (test_manager.Migration.test_unknown_worktree_registry_refused) ... ok
+test_valid_worktree_registry_migrates_without_git_mutation (test_manager.Migration.test_valid_worktree_registry_migrates_without_git_mutation) ... ok
+test_writer_appears_before_commit (test_manager.Migration.test_writer_appears_before_commit) ... ok
+test_defaults (test_manager.Profiles.test_defaults) ... ok
+test_existing_not_overwritten (test_manager.Profiles.test_existing_not_overwritten) ... ok
+test_invalid_names (test_manager.Profiles.test_invalid_names) ... ok
+test_managed_backup_root_refused (test_manager.Profiles.test_managed_backup_root_refused) ... ok
+test_manager_named_profile_has_independent_lock (test_manager.Profiles.test_manager_named_profile_has_independent_lock) ... ok
+test_no_overlapping_roots (test_manager.Profiles.test_no_overlapping_roots) ... ok
+test_symlink_lock_directory_refused (test_manager.Profiles.test_symlink_lock_directory_refused) ... ok
+test_symlink_root_refused (test_manager.Profiles.test_symlink_root_refused) ... ok
+test_unknown_schema (test_manager.Profiles.test_unknown_schema) ... ok
+test_absolute_internal_project_link_rebased (test_manager.ProjectsAndLaunchers.test_absolute_internal_project_link_rebased) ... ok
+test_bundle_identifiers_do_not_collide (test_manager.ProjectsAndLaunchers.test_bundle_identifiers_do_not_collide) ... ok
+test_external_project_symlink_refused (test_manager.ProjectsAndLaunchers.test_external_project_symlink_refused) ... ok
+test_git_alternates_refused (test_manager.ProjectsAndLaunchers.test_git_alternates_refused) ... ok
+test_gui_duplicate_returns_without_open (test_manager.ProjectsAndLaunchers.test_gui_duplicate_returns_without_open) ... ok
+test_gui_open_command_and_confirmation (test_manager.ProjectsAndLaunchers.test_gui_open_command_and_confirmation) ... ok
+test_gui_other_profile_refused (test_manager.ProjectsAndLaunchers.test_gui_other_profile_refused) ... ok
+test_launchers_and_plist (test_manager.ProjectsAndLaunchers.test_launchers_and_plist) ... ok
+test_linked_worktree_refused (test_manager.ProjectsAndLaunchers.test_linked_worktree_refused) ... ok
+test_nested_submodule_pointer_refused (test_manager.ProjectsAndLaunchers.test_nested_submodule_pointer_refused) ... ok
+test_no_unowned_launcher_overwrite (test_manager.ProjectsAndLaunchers.test_no_unowned_launcher_overwrite) ... ok
+test_path_idempotent_and_quoted (test_manager.ProjectsAndLaunchers.test_path_idempotent_and_quoted) ... ok
+test_project_copy_with_dirty_files (test_manager.ProjectsAndLaunchers.test_project_copy_with_dirty_files) ... ok
+test_recursive_binary_refused (test_manager.ProjectsAndLaunchers.test_recursive_binary_refused) ... ok
+test_registered_worktrees_refused_for_project_copy (test_manager.ProjectsAndLaunchers.test_registered_worktrees_refused_for_project_copy) ... ok
+test_settings_edit_validates_and_backs_up (test_manager.ProjectsAndLaunchers.test_settings_edit_validates_and_backs_up) ... ok
+test_settings_editor_invalid_json_preserves_original (test_manager.ProjectsAndLaunchers.test_settings_editor_invalid_json_preserves_original) ... ok
+test_shell_rc_backup (test_manager.ProjectsAndLaunchers.test_shell_rc_backup) ... ok
+test_busy_profile_lock (test_manager.Transactions.test_busy_profile_lock) ... ok
+test_committed_recovery_does_not_rollback (test_manager.Transactions.test_committed_recovery_does_not_rollback) ... ok
+test_pending_blocks_new_operation (test_manager.Transactions.test_pending_blocks_new_operation) ... ok
+test_recover_after_installed_new_tree (test_manager.Transactions.test_recover_after_installed_new_tree) ... ok
+test_rollback_after_second_rename_failure (test_manager.Transactions.test_rollback_after_second_rename_failure) ... ok
+test_running_writer_refused (test_manager.Transactions.test_running_writer_refused) ... ok
+test_unsafe_journal_refused (test_manager.Transactions.test_unsafe_journal_refused) ... ok
+test_cli_only_backup_both_means_enabled_cli (test_update.ProfileTypes.test_cli_only_backup_both_means_enabled_cli) ... ok
+test_cli_only_creates_no_gui_root_or_launcher (test_update.ProfileTypes.test_cli_only_creates_no_gui_root_or_launcher) ... ok
+test_data_operation_still_checks_processes (test_update.ProfileTypes.test_data_operation_still_checks_processes) ... ok
+test_disabled_type_has_clear_error (test_update.ProfileTypes.test_disabled_type_has_clear_error) ... ok
+test_gui_only_backup_restore (test_update.ProfileTypes.test_gui_only_backup_restore) ... ok
+test_gui_only_creates_no_cli_root_or_launcher (test_update.ProfileTypes.test_gui_only_creates_no_cli_root_or_launcher) ... ok
+test_gui_only_doctor_does_not_require_cli_binary (test_update.ProfileTypes.test_gui_only_doctor_does_not_require_cli_binary) ... ok
+test_gui_only_launch_does_not_inherit_cli_config (test_update.ProfileTypes.test_gui_only_launch_does_not_inherit_cli_config) ... ok
+test_gui_only_launch_ignores_unrelated_cli_process (test_update.ProfileTypes.test_gui_only_launch_ignores_unrelated_cli_process) ... ok
+test_gui_only_launchers_do_not_depend_on_shell_rc (test_update.ProfileTypes.test_gui_only_launchers_do_not_depend_on_shell_rc) ... ok
+test_import_both_backup_into_cli_only (test_update.ProfileTypes.test_import_both_backup_into_cli_only) ... ok
+test_metadata_launchers_dont_block_active_cli_lock (test_update.ProfileTypes.test_metadata_launchers_dont_block_active_cli_lock) ... ok
+test_migrate_cli_only_default_scope (test_update.ProfileTypes.test_migrate_cli_only_default_scope) ... ok
+test_migrate_gui_only_settings (test_update.ProfileTypes.test_migrate_gui_only_settings) ... ok
+test_migrate_mixed_types_needs_explicit_scope (test_update.ProfileTypes.test_migrate_mixed_types_needs_explicit_scope) ... ok
+test_no_process_scan_during_cli_launch (test_update.ProfileTypes.test_no_process_scan_during_cli_launch) ... ok
+test_old_registry_without_kind_is_both (test_update.ProfileTypes.test_old_registry_without_kind_is_both) ... ok
+test_set_type_preserves_and_reenables_old_data (test_update.ProfileTypes.test_set_type_preserves_and_reenables_old_data) ... ok
+test_busy_cli_lock_refuses_update (test_update.UpdaterTests.test_busy_cli_lock_refuses_update) ... ok
+test_committed_update_recovery_keeps_new_files (test_update.UpdaterTests.test_committed_update_recovery_keeps_new_files) ... ok
+test_corrupt_candidate_refused_before_import (test_update.UpdaterTests.test_corrupt_candidate_refused_before_import) ... ok
+test_failed_launcher_regeneration_rolls_back_scripts_and_shell (test_update.UpdaterTests.test_failed_launcher_regeneration_rolls_back_scripts_and_shell) ... ok
+test_idempotent_repeated_update (test_update.UpdaterTests.test_idempotent_repeated_update) ... ok
+test_missing_yes_changes_nothing (test_update.UpdaterTests.test_missing_yes_changes_nothing) ... ok
+test_old_both_registry_and_owned_gui_launcher_upgrade (test_update.UpdaterTests.test_old_both_registry_and_owned_gui_launcher_upgrade) ... ok
+test_old_root_only_removes_owned_old_block (test_update.UpdaterTests.test_old_root_only_removes_owned_old_block) ... ok
+test_other_payload_corruption_refused (test_update.UpdaterTests.test_other_payload_corruption_refused) ... ok
+test_partial_shell_block_refuses_before_changes (test_update.UpdaterTests.test_partial_shell_block_refuses_before_changes) ... ok
+test_recovery_of_interrupted_update (test_update.UpdaterTests.test_recovery_of_interrupted_update) ... ok
+test_shell_symlink_refused_no_overwrite (test_update.UpdaterTests.test_shell_symlink_refused_no_overwrite) ... ok
+test_skip_shell_respects_symlink (test_update.UpdaterTests.test_skip_shell_respects_symlink) ... ok
+test_update_journal_blocks_launch_but_recovery_can_acquire_lock (test_update.UpdaterTests.test_update_journal_blocks_launch_but_recovery_can_acquire_lock) ... ok
+test_update_repairs_shell_and_preserves_registry_and_data (test_update.UpdaterTests.test_update_repairs_shell_and_preserves_registry_and_data) ... ok
+
+----------------------------------------------------------------------
+Ran 109 tests in 3.608s
+
+OK
+Claude alpha is already running (PID 888).
+Started Claude alpha (PID 777).
+Started Claude single (PID 777).
+Started Claude single (PID 777).
+
+Both passes, Python syntax and shell syntax passed.

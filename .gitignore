@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+/manager.json
+/transaction.json
+/data/
+/backups/
+/exports/
+/locks/
+/receipts/
+/shell-backups/
+/sbin/
+/Applications/
+.cm-*
